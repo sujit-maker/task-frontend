@@ -10,7 +10,6 @@ interface UpdateUserModalProps {
 
 const UpdateUserModal: React.FC<UpdateUserModalProps> = ({ show, onHide, userId, fetchUsers }) => {
   const [username, setUsername] = useState<string>('');
-  const [password, setPassword] = useState<string>('');
   const [firstName, setFirstName] = useState<string>('');
   const [lastName, setLastName] = useState<string>('');
   const [contactNumber, setContactNumber] = useState<string>('');
@@ -26,7 +25,6 @@ const UpdateUserModal: React.FC<UpdateUserModalProps> = ({ show, onHide, userId,
           const response = await axios.get(`http://localhost:8000/users/${userId}`);
           const userData = response.data;
           setUsername(userData.username);
-          setPassword(userData.password);
           setFirstName(userData.firstName);
           setLastName(userData.lastName);
           setContactNumber(userData.contactNumber);
@@ -49,7 +47,6 @@ const UpdateUserModal: React.FC<UpdateUserModalProps> = ({ show, onHide, userId,
     try {
       const updatedUser = {
         username,
-        password,
         firstName,
         lastName,
         contactNumber,
@@ -109,17 +106,6 @@ const UpdateUserModal: React.FC<UpdateUserModalProps> = ({ show, onHide, userId,
               />
             </div>
 
-            <div className="flex flex-col">
-              <label className="text-sm font-medium text-gray-700">password</label>
-              <input
-                type="text"
-                className="p-3 border border-gray-300 rounded-md mt-1"
-                placeholder="Enter password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-              />
-            </div>
 
             <div className="flex flex-col">
               <label className="text-sm font-medium text-gray-700">First Name</label>

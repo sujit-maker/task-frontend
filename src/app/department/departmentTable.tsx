@@ -19,7 +19,7 @@ const DepartmentTable: React.FC = () => {
     departmentName: "",
   });
 
-  // Fetch all departments
+  
   const fetchDepartments = async () => {
     setLoading(true);
     try {
@@ -32,7 +32,7 @@ const DepartmentTable: React.FC = () => {
     }
   };
 
-  // Add a new department
+  
   const handleAdd = async () => {
     try {
       await axios.post("http://localhost:8000/departments", formData);
@@ -44,7 +44,7 @@ const DepartmentTable: React.FC = () => {
     }
   };
 
-  // Update an existing department
+  
   const handleUpdate = async () => {
     try {
       await axios.put(
@@ -59,7 +59,7 @@ const DepartmentTable: React.FC = () => {
     }
   };
 
-  // Delete a department
+  
   const handleDelete = async (id: number) => {
     if (window.confirm("Are you sure you want to delete this department?")) {
       try {
@@ -72,7 +72,7 @@ const DepartmentTable: React.FC = () => {
     }
   };
 
-  // Open the modal for adding or editing a department
+  
   const openModal = (department?: Department) => {
     if (department) {
       setFormData(department);
@@ -84,7 +84,7 @@ const DepartmentTable: React.FC = () => {
     setIsModalOpen(true);
   };
 
-  // Close the modal
+  
   const closeModal = () => {
     setIsModalOpen(false);
     setFormData({ id: 0, departmentName: "" });

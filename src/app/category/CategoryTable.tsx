@@ -10,7 +10,7 @@ interface SubCategory {
 interface Category {
   id: number;
   categoryName: string;
-  subCategories: SubCategory[];  // Updated to reflect subcategories structure
+  subCategories: SubCategory[];  
 }
 
 const CategoryTable: React.FC = () => {
@@ -57,17 +57,73 @@ const CategoryTable: React.FC = () => {
   };
 
   const handleUpdate = async () => {
-    if (selectedCategory) {
-      try {
-        await axios.put(`http://localhost:8000/category/${selectedCategory.id}`, formData);
-        alert("Category updated successfully!");
-        setIsUpdateModalOpen(false);
-        fetchCategories();
-      } catch (error) {
-        console.error("Error updating category:", error);
+    if (!selectedCategory) return;
+  
+    try {
+      const promises = [];
+  
+      
+      if (formData.categoryName !== selectedCategory.categoryName) {
+        promises.push(
+          axios.put(`http://localhost:8000/category/${selectedCategory.id}`, {
+            categoryName: formData.categoryName,
+          })
+        );
       }
+  
+      
+      const originalSubCategoryNames = selectedCategory.subCategories
+        .map((sub) => sub.subCategoryName)
+        .join(", ");
+      if (formData.subCategoryName !== originalSubCategoryNames) {
+        const updatedSubCategories = formData.subCategoryName
+          .split(",")
+          .map((name) => name.trim());
+  
+        
+        updatedSubCategories.forEach((subCategoryName, index) => {
+          const existingSubCategory = selectedCategory.subCategories[index];
+  
+          if (existingSubCategory) {
+            
+            promises.push(
+              axios.put(`http://localhost:8000/subCategory/${existingSubCategory.id}`, {
+                subCategoryName,
+              })
+            );
+          } else {
+            
+            promises.push(
+              axios.post(`http://localhost:8000/subCategory`, {
+                categoryId: selectedCategory.id,
+                subCategoryName,
+              })
+            );
+          }
+        });
+  
+        
+        if (selectedCategory.subCategories.length > updatedSubCategories.length) {
+          const removedSubCategories = selectedCategory.subCategories.slice(updatedSubCategories.length);
+          removedSubCategories.forEach((sub) =>
+            promises.push(axios.delete(`http://localhost:8000/subCategory/${sub.id}`))
+          );
+        }
+      }
+  
+      
+      await Promise.all(promises);
+  
+      alert("Category and subcategories updated successfully!");
+      setIsUpdateModalOpen(false);
+      fetchCategories();
+    } catch (error) {
+      console.error("Error updating category or subcategories:", error);
+      alert("Failed to update category or subcategories.");
     }
   };
+  
+  
 
   useEffect(() => {
     fetchCategories();
@@ -118,7 +174,7 @@ const CategoryTable: React.FC = () => {
                             categoryName: category.categoryName,
                             subCategoryName: category.subCategories
                               .map((sub) => sub.subCategoryName)
-                              .join(", "), // Combine subcategories into a string for easy editing
+                              .join(", "), 
                           });
                           setIsUpdateModalOpen(true);
                         }}

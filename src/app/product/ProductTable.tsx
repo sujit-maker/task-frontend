@@ -17,7 +17,7 @@ interface Product {
 interface Category {
   id: number;
   categoryName: string;
-  subCategoryName:string;
+  subCategoryName: string;
 }
 
 const ProductTable: React.FC = () => {
