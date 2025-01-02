@@ -1,10 +1,10 @@
-"use client";
+"use client"
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 
+// Define interfaces
 interface Task {
   id: number;
-  taskTypeId: number;
   departmentId: number;
   customerName: string;
   customerAddress: string;
@@ -13,6 +13,7 @@ interface Task {
   contactNo: string;
   emailId: string;
   requirement: string;
+  serviceId: number;
 }
 
 interface Department {
@@ -20,20 +21,19 @@ interface Department {
   departmentName: string;
 }
 
-interface TaskType {
+interface Service {
   id: number;
-  taskType: string;
+  serviceName: string;
 }
 
 const TaskTable: React.FC = () => {
-  const [Tasks, setTasks] = useState<Task[]>([]);
+  const [tasks, setTasks] = useState<Task[]>([]);
   const [departments, setDepartments] = useState<Department[]>([]);
-  const [taskTypes, setTaskTypes] = useState<TaskType[]>([]);
+  const [services, setServices] = useState<Service[]>([]); // Store services based on department
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState<Task>({
     id: 0,
-    taskTypeId: 0,
     departmentId: 0,
     customerName: '',
     customerAddress: '',
@@ -41,9 +41,11 @@ const TaskTable: React.FC = () => {
     contactName: '',
     contactNo: '',
     emailId: '',
-    requirement: ''
+    requirement: '',
+    serviceId: 0
   });
 
+  // Fetch tasks
   const fetchTasks = async () => {
     try {
       const response = await axios.get("http://localhost:8000/tasks");
@@ -53,15 +55,7 @@ const TaskTable: React.FC = () => {
     }
   };
 
-  const fetchTaskTypes = async () => {
-    try {
-      const response = await axios.get("http://localhost:8000/tasktype");
-      setTaskTypes(response.data);
-    } catch (error) {
-      console.error("Error fetching task types:", error);
-    }
-  };
-
+  // Fetch departments
   const fetchDepartments = async () => {
     try {
       const response = await axios.get("http://localhost:8000/departments");
@@ -71,6 +65,18 @@ const TaskTable: React.FC = () => {
     }
   };
 
+  // Fetch services based on selected department
+  const fetchServicesByDepartment = async (departmentId: number) => {
+    try {
+      const response = await axios.get(`http://localhost:8000/tasks/services/${departmentId}`);
+      setServices(response.data); // Assuming response contains services based on departmentId
+    } catch (error) {
+      console.error("Error fetching services:", error);
+      setServices([]); // Clear services if error occurs
+    }
+  };
+
+  // Handle task deletion
   const handleDelete = async (id: number) => {
     try {
       await axios.delete(`http://localhost:8000/tasks/${id}`);
@@ -81,6 +87,7 @@ const TaskTable: React.FC = () => {
     }
   };
 
+  // Handle task save (add or update)
   const handleSave = async () => {
     try {
       if (isEditing) {
@@ -97,11 +104,11 @@ const TaskTable: React.FC = () => {
     }
   };
 
+  // Open modal for adding or editing a task
   const openModal = (task: Task | null = null) => {
     setIsEditing(!!task);
     setFormData(task || {
       id: 0,
-      taskTypeId: 0,
       departmentId: 0,
       customerName: '',
       customerAddress: '',
@@ -109,15 +116,22 @@ const TaskTable: React.FC = () => {
       contactName: '',
       contactNo: '',
       emailId: '',
-      requirement: ''
+      requirement: '',
+      serviceId: 0
     });
     setIsModalOpen(true);
   };
 
+  // Handle department change
+  const handleDepartmentChange = (departmentId: number) => {
+    setFormData({ ...formData, departmentId, serviceId: 0 }); // Reset serviceId when department changes
+    fetchServicesByDepartment(departmentId); // Fetch services based on selected department
+  };
+
+  // Fetch tasks and departments when component mounts
   useEffect(() => {
     fetchTasks();
     fetchDepartments();
-    fetchTaskTypes();
   }, []);
 
   return (
@@ -133,11 +147,10 @@ const TaskTable: React.FC = () => {
         </div>
 
         <div className="bg-white shadow-md rounded-lg overflow-hidden">
-          <table className="w-screen text-center table-auto border-collapse border border-gray-200">
+          <table className="w-full text-center table-auto border-collapse border border-gray-200">
             <thead>
               <tr className="bg-gray-200">
                 <th className="border border-gray-300 p-3">ID</th>
-                <th className="border border-gray-300 p-3">Task Type</th>
                 <th className="border border-gray-300 p-3">Department</th>
                 <th className="border border-gray-300 p-3">Customer Name</th>
                 <th className="border border-gray-300 p-3">Contact No</th>
@@ -145,13 +158,10 @@ const TaskTable: React.FC = () => {
               </tr>
             </thead>
             <tbody>
-              {Tasks.length > 0 ? (
-                Tasks.map((task) => (
+              {tasks.length > 0 ? (
+                tasks.map((task) => (
                   <tr key={task.id} className="hover:bg-gray-100">
                     <td className="border border-gray-300 p-3">{task.id}</td>
-                    <td className="border border-gray-300 p-3">
-                      {taskTypes.find((type) => type.id === task.taskTypeId)?.taskType}
-                    </td>
                     <td className="border border-gray-300 p-3">
                       {departments.find((dept) => dept.id === task.departmentId)?.departmentName}
                     </td>
@@ -175,7 +185,7 @@ const TaskTable: React.FC = () => {
                 ))
               ) : (
                 <tr>
-                  <td colSpan={6} className="p-3 text-gray-500">
+                  <td colSpan={5} className="p-3 text-gray-500">
                     No tasks available.
                   </td>
                 </tr>
@@ -191,6 +201,32 @@ const TaskTable: React.FC = () => {
             <h2 className="text-lg font-semibold mb-4">
               {isEditing ? "Edit Task" : "Add Task"}
             </h2>
+
+            <select
+              value={formData.departmentId}
+              onChange={(e) => handleDepartmentChange(parseInt(e.target.value, 10))}
+              className="border p-2 rounded mb-4 w-full"
+            >
+              <option value={0}>Select Department</option>
+              {departments.map((department) => (
+                <option key={department.id} value={department.id}>
+                  {department.departmentName}
+                </option>
+              ))}
+            </select>
+            <select
+              value={formData.serviceId}
+              onChange={(e) => setFormData({ ...formData, serviceId: parseInt(e.target.value, 10) })}
+              className="border p-2 rounded mb-4 w-full"
+            >
+              <option value={0}>Select Service</option>
+              {services.map((service) => (
+                <option key={service.id} value={service.id}>
+                  {service.serviceName}
+                </option>
+              ))}
+            </select>
+
             <input
               type="text"
               value={formData.customerName}
@@ -238,30 +274,7 @@ const TaskTable: React.FC = () => {
               placeholder="Requirement"
               className="border p-2 rounded mb-4 w-full"
             />
-            <select
-              value={formData.taskTypeId}
-              onChange={(e) => setFormData({ ...formData, taskTypeId: parseInt(e.target.value, 10) })}
-              className="border p-2 rounded mb-4 w-full"
-            >
-              <option value={0}>Select Task Type</option>
-              {taskTypes.map((taskType) => (
-                <option key={taskType.id} value={taskType.id}>
-                  {taskType.taskType}
-                </option>
-              ))}
-            </select>
-            <select
-              value={formData.departmentId}
-              onChange={(e) => setFormData({ ...formData, departmentId: parseInt(e.target.value, 10) })}
-              className="border p-2 rounded mb-4 w-full"
-            >
-              <option value={0}>Select Department</option>
-              {departments.map((dept) => (
-                <option key={dept.id} value={dept.id}>
-                  {dept.departmentName}
-                </option>
-              ))}
-            </select>
+           
             <button
               onClick={handleSave}
               className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 mr-2"

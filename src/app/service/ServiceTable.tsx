@@ -2,23 +2,23 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 
-interface ServiceType {
+// Define the Department and Service types
+interface Department {
   id: number;
-  serviceType: string;
+  departmentName: string;
 }
 
 interface Service {
-  id: string;
+  id: number;
   serviceName: string;
   serviceDescription: string;
   SAC: string;
-  serviceTypeId: number;
-  ServiceType: ServiceType; // Nested service type object
+  departmentId: number;
 }
 
 const ServiceTable: React.FC = () => {
   const [services, setServices] = useState<Service[]>([]);
-  const [serviceTypes, setServiceTypes] = useState<ServiceType[]>([]);
+  const [departments, setDepartments] = useState<Department[]>([]); // Fetch departments
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isUpdateModalOpen, setIsUpdateModalOpen] = useState(false);
   const [selectedService, setSelectedService] = useState<Service | null>(null);
@@ -26,9 +26,10 @@ const ServiceTable: React.FC = () => {
     serviceName: "",
     serviceDescription: "",
     SAC: "",
-    serviceTypeId: 0,
+    departmentId: 0,  // Changed to departmentId
   });
 
+  // Fetch the list of services
   const fetchServices = async () => {
     try {
       const response = await axios.get("http://localhost:8000/service");
@@ -38,20 +39,26 @@ const ServiceTable: React.FC = () => {
     }
   };
 
-  const fetchServiceTypes = async () => {
+  // Fetch the list of departments
+  const fetchDepartments = async () => {
     try {
-      const response = await axios.get("http://localhost:8000/service-type");
-      setServiceTypes(response.data);
+      const response = await axios.get("http://localhost:8000/departments");
+      setDepartments(response.data);
     } catch (error) {
-      console.error("Error fetching service types:", error);
+      console.error("Error fetching departments:", error);
     }
   };
 
+  // Handle input changes in form
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
-    setFormData((prevData) => ({ ...prevData, [name]: name === "serviceTypeId" ? +value : value }));
+    setFormData((prevData) => ({
+      ...prevData,
+      [name]: name === "departmentId" ? +value : value, // Ensure the departmentId is parsed as a number
+    }));
   };
 
+  // Handle create new service
   const handleCreate = async () => {
     try {
       await axios.post("http://localhost:8000/service", formData);
@@ -63,6 +70,7 @@ const ServiceTable: React.FC = () => {
     }
   };
 
+  // Handle update an existing service
   const handleUpdate = async () => {
     if (selectedService) {
       try {
@@ -76,7 +84,8 @@ const ServiceTable: React.FC = () => {
     }
   };
 
-  const handleDelete = async (id: string) => {
+  // Handle delete a service
+  const handleDelete = async (id: number) => {
     if (window.confirm("Are you sure you want to delete this service?")) {
       try {
         await axios.delete(`http://localhost:8000/service/${id}`);
@@ -88,9 +97,10 @@ const ServiceTable: React.FC = () => {
     }
   };
 
+  // Fetch data on component mount
   useEffect(() => {
     fetchServices();
-    fetchServiceTypes();
+    fetchDepartments();
   }, []);
 
   return (
@@ -100,7 +110,7 @@ const ServiceTable: React.FC = () => {
           <h1 className="text-2xl font-bold">Service Management</h1>
           <button
             onClick={() => {
-              setFormData({ serviceName: "", serviceDescription: "", SAC: "", serviceTypeId: 0 });
+              setFormData({ serviceName: "", serviceDescription: "", SAC: "", departmentId: 0 });
               setIsCreateModalOpen(true);
             }}
             className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
@@ -115,7 +125,7 @@ const ServiceTable: React.FC = () => {
                 <th className="border border-gray-300 px-4 py-2">Service Name</th>
                 <th className="border border-gray-300 px-4 py-2">Description</th>
                 <th className="border border-gray-300 px-4 py-2">SAC</th>
-                <th className="border border-gray-300 px-4 py-2">Service Type</th>
+                <th className="border border-gray-300 px-4 py-2">Department</th>
                 <th className="border border-gray-300 px-4 py-2 text-center">Actions</th>
               </tr>
             </thead>
@@ -126,7 +136,7 @@ const ServiceTable: React.FC = () => {
                   <td className="border border-gray-300 px-4 py-2">{service.serviceDescription}</td>
                   <td className="border border-gray-300 px-4 py-2">{service.SAC}</td>
                   <td className="border border-gray-300 px-4 py-2">
-                    {service.ServiceType?.serviceType || "N/A"}
+                    {departments.find((dept) => dept.id === service.departmentId)?.departmentName || "N/A"}
                   </td>
                   <td className="border border-gray-300 px-4 py-2 text-center">
                     <button
@@ -136,7 +146,7 @@ const ServiceTable: React.FC = () => {
                           serviceName: service.serviceName,
                           serviceDescription: service.serviceDescription,
                           SAC: service.SAC,
-                          serviceTypeId: service.serviceTypeId,
+                          departmentId: service.departmentId, // Use departmentId
                         });
                         setIsUpdateModalOpen(true);
                       }}
@@ -162,7 +172,7 @@ const ServiceTable: React.FC = () => {
         <Modal
           title="Add Service"
           formData={formData}
-          serviceTypes={serviceTypes}
+          departments={departments}  // Pass departments instead of serviceTypes
           onInputChange={handleInputChange}
           onSave={handleCreate}
           onClose={() => setIsCreateModalOpen(false)}
@@ -173,7 +183,7 @@ const ServiceTable: React.FC = () => {
         <Modal
           title="Update Service"
           formData={formData}
-          serviceTypes={serviceTypes}
+          departments={departments}  // Pass departments instead of serviceTypes
           onInputChange={handleInputChange}
           onSave={handleUpdate}
           onClose={() => setIsUpdateModalOpen(false)}
@@ -183,17 +193,31 @@ const ServiceTable: React.FC = () => {
   );
 };
 
+// Modal for create/update service
 const Modal: React.FC<{
   title: string;
   formData: any;
-  serviceTypes: ServiceType[];
+  departments: Department[];  // Change from serviceTypes to departments
   onInputChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => void;
   onSave: () => void;
   onClose: () => void;
-}> = ({ title, formData, serviceTypes, onInputChange, onSave, onClose }) => (
+}> = ({ title, formData, departments, onInputChange, onSave, onClose }) => (
   <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
     <div className="bg-white p-6 rounded-lg w-96">
       <h2 className="text-xl font-bold mb-4">{title}</h2>
+      <select
+        name="departmentId"
+        value={formData.departmentId}
+        onChange={onInputChange}
+        className="w-full mb-3 p-2 border rounded"
+      >
+        <option value={0}>Select Department</option>
+        {departments.map((dept) => (
+          <option key={dept.id} value={dept.id}>
+            {dept.departmentName}
+          </option>
+        ))}
+      </select>
       <input
         name="serviceName"
         value={formData.serviceName}
@@ -215,19 +239,7 @@ const Modal: React.FC<{
         placeholder="SAC"
         className="w-full mb-3 p-2 border rounded"
       />
-      <select
-        name="serviceTypeId"
-        value={formData.serviceTypeId}
-        onChange={onInputChange}
-        className="w-full mb-3 p-2 border rounded"
-      >
-        <option value={0}>Select Service Type</option>
-        {serviceTypes.map((type) => (
-          <option key={type.id} value={type.id}>
-            {type.serviceType}
-          </option>
-        ))}
-      </select>
+      
       <div className="flex justify-end space-x-2">
         <button onClick={onSave} className="bg-blue-500 text-white px-4 py-2 rounded">
           Save

@@ -55,7 +55,10 @@ const TaskTypeTable: React.FC = () => {
   const handleSave = async () => {
     try {
       if (isEditing) {
-        await axios.put(`http://localhost:8000/tasktype/${formData.id}`, formData);
+        await axios.put(
+          `http://localhost:8000/tasktype/${formData.id}`,
+          formData
+        );
         alert("Task type updated successfully!");
       } else {
         await axios.post("http://localhost:8000/tasktype", formData);
@@ -92,7 +95,7 @@ const TaskTypeTable: React.FC = () => {
         </div>
 
         <div className="bg-white shadow-md rounded-lg overflow-hidden">
-          <table className="w-screen text-center table-auto border-collapse border border-gray-200">
+          <table className="w-full text-center table-auto border-collapse border border-gray-200">
             <thead>
               <tr className="bg-gray-200">
                 <th className="border border-gray-300 p-3">Id</th>
@@ -106,8 +109,13 @@ const TaskTypeTable: React.FC = () => {
                 taskTypes.map((type) => (
                   <tr key={type.id} className="hover:bg-gray-100">
                     <td className="border border-gray-300 p-3">{type.id}</td>
-                    <td className="border border-gray-300 p-3">{type.taskType}</td>
-                    <td className="border border-gray-300 p-3">{type.departmentId}</td>
+                    <td className="border border-gray-300 p-3">
+                      {type.taskType}
+                    </td>
+                    <td className="border border-gray-300 p-3">
+                      {departments.find((dept) => dept.id === type.departmentId)
+                        ?.departmentName || "Unknown Department"}
+                    </td>
                     <td className="border border-gray-300 p-3">
                       <button
                         onClick={() => openModal(type)}
@@ -145,14 +153,19 @@ const TaskTypeTable: React.FC = () => {
             <input
               type="text"
               value={formData.taskType}
-              onChange={(e) => setFormData({ ...formData, taskType: e.target.value })}
+              onChange={(e) =>
+                setFormData({ ...formData, taskType: e.target.value })
+              }
               placeholder="Task Type Name"
               className="border p-2 rounded mb-4 w-full"
             />
             <select
               value={formData.departmentId}
               onChange={(e) =>
-                setFormData({ ...formData, departmentId: parseInt(e.target.value, 10) })
+                setFormData({
+                  ...formData,
+                  departmentId: parseInt(e.target.value, 10),
+                })
               }
               className="border p-2 rounded mb-4 w-full"
             >

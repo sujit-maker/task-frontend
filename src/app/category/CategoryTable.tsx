@@ -89,7 +89,7 @@ const CategoryTable: React.FC = () => {
         </div>
 
         <div className="bg-white shadow-md rounded-lg overflow-hidden">
-          <table className="w-screen text-center table-auto border-collapse border border-gray-200">
+          <table className="w-full text-center table-auto border-collapse border border-gray-200">
             <thead>
               <tr className="bg-gray-200">
                 <th className="border border-gray-300 p-3">Id</th>

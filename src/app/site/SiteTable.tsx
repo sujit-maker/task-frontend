@@ -12,9 +12,11 @@ interface Site {
   siteId: string;
   customerId: number;
   siteName: string;
+  siteAddress:string;
+  contactName:string;
   contactNumber: string;
   emailId: string;
-  Customer: Customer; // Nested customer object
+  Customer: Customer; 
 }
 
 const SiteTable: React.FC = () => {
@@ -26,6 +28,8 @@ const SiteTable: React.FC = () => {
   const [formData, setFormData] = useState({
     siteId: "",
     siteName: "",
+    siteAddress: "",
+    contactName: "",
     contactNumber: "",
     emailId: "",
     customerId: 0,
@@ -113,6 +117,8 @@ const SiteTable: React.FC = () => {
               setFormData({
                 siteId: "",
                 siteName: "",
+                siteAddress: "",
+                contactName: "",
                 contactNumber: "",
                 emailId: "",
                 customerId: 0,
@@ -130,6 +136,10 @@ const SiteTable: React.FC = () => {
               <tr className="bg-gray-200">
                 <th className="border border-gray-300 px-4 py-2">Site ID</th>
                 <th className="border border-gray-300 px-4 py-2">Site Name</th>
+                <th className="border border-gray-300 px-4 py-2">Site Address</th>
+                <th className="border border-gray-300 px-4 py-2">Contact Name</th>
+                <th className="border border-gray-300 px-4 py-2">Contact Number</th>
+                <th className="border border-gray-300 px-4 py-2">Email ID</th>
                 <th className="border border-gray-300 px-4 py-2">Customer</th>
                 <th className="border border-gray-300 px-4 py-2">Actions</th>
               </tr>
@@ -139,6 +149,10 @@ const SiteTable: React.FC = () => {
                 <tr key={site.id} className="hover:bg-gray-100">
                   <td className="border border-gray-300 px-4 py-2">{site.siteId}</td>
                   <td className="border border-gray-300 px-4 py-2">{site.siteName}</td>
+                  <td className="border border-gray-300 px-4 py-2">{site.siteAddress}</td>
+                  <td className="border border-gray-300 px-4 py-2">{site.contactName}</td>
+                  <td className="border border-gray-300 px-4 py-2">{site.contactNumber}</td>
+                  <td className="border border-gray-300 px-4 py-2">{site.emailId}</td>
                   <td className="border border-gray-300 px-4 py-2">{site.Customer.customerName}</td>
                   <td className="border border-gray-300 px-4 py-2 text-center">
                     <button
@@ -147,6 +161,8 @@ const SiteTable: React.FC = () => {
                         setFormData({
                           siteId: site.siteId,
                           siteName: site.siteName,
+                          siteAddress: site.siteAddress,
+                          contactName: site.contactName,
                           contactNumber: site.contactNumber,
                           emailId: site.emailId,
                           customerId: site.customerId,
@@ -207,6 +223,20 @@ const Modal: React.FC<{
   <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
     <div className="bg-white p-6 rounded-lg w-96">
       <h2 className="text-xl font-bold mb-4">{title}</h2>
+
+      <select
+        name="customerId"
+        value={formData.customerId}
+        onChange={onInputChange}
+        className="w-full mb-3 p-2 border rounded"
+      >
+        <option value="">Select Customer</option>
+        {customers.map((customer) => (
+          <option key={customer.id} value={customer.id}>
+            {customer.customerName}
+          </option>
+        ))}
+      </select>
       <input
         name="siteId"
         value={formData.siteId}
@@ -219,6 +249,20 @@ const Modal: React.FC<{
         value={formData.siteName}
         onChange={onInputChange}
         placeholder="Site Name"
+        className="w-full mb-3 p-2 border rounded"
+      />
+      <input
+        name="siteAddress"
+        value={formData.siteAddress}
+        onChange={onInputChange}
+        placeholder="Site Address"
+        className="w-full mb-3 p-2 border rounded"
+      />
+      <input
+        name="contactName"
+        value={formData.contactName}
+        onChange={onInputChange}
+        placeholder="Contact Name"
         className="w-full mb-3 p-2 border rounded"
       />
       <input
@@ -235,19 +279,7 @@ const Modal: React.FC<{
         placeholder="Email ID"
         className="w-full mb-3 p-2 border rounded"
       />
-      <select
-        name="customerId"
-        value={formData.customerId}
-        onChange={onInputChange}
-        className="w-full mb-3 p-2 border rounded"
-      >
-        <option value="">Select Customer</option>
-        {customers.map((customer) => (
-          <option key={customer.id} value={customer.id}>
-            {customer.customerName}
-          </option>
-        ))}
-      </select>
+
       <div className="flex justify-end space-x-2">
         <button onClick={onSave} className="bg-blue-500 text-white px-4 py-2 rounded">
           Save

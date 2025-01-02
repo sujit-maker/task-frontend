@@ -1,9 +1,8 @@
-"use client"
+"use client";
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import CreateUserModal from './CreateUserModal';
 import UpdateUserModal from './UpdateUserModal';
-
 
 interface User {
   id: string;
@@ -16,28 +15,36 @@ interface User {
   userType: string;
 }
 
+interface Department {
+  id: number;
+  departmentName: string;
+}
+
 const UserTable: React.FC = () => {
   const [users, setUsers] = useState<User[]>([]);
+  const [departments, setDepartments] = useState<Department[]>([]);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-  const [isUpdateModalOpen, setIsUpdateModalOpen] = useState(false);
-  const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [showUpdateModal, setShowUpdateModal] = useState<boolean>(false);
   const [selectedUserId, setSelectedUserId] = useState<string>('');
 
-  const [isLoading, setIsLoading] = useState<boolean>(false);
-
   const fetchUsers = async () => {
-    setIsLoading(true);
     try {
       const response = await axios.get('http://localhost:8000/users');
       setUsers(response.data);
     } catch (error) {
       console.error('Error fetching users:', error);
-    } finally {
-      setIsLoading(false);
     }
   };
-  
+
+  const fetchDepartments = async () => {
+    try {
+      const response = await axios.get('http://localhost:8000/departments');
+      setDepartments(response.data);
+    } catch (error) {
+      console.error('Error fetching departments:', error);
+    }
+  };
+
   const handleDelete = async (id: string) => {
     try {
       await axios.delete(`http://localhost:8000/users/${id}`);
@@ -48,19 +55,23 @@ const UserTable: React.FC = () => {
     }
   };
 
-  // Handle opening the update modal
   const handleEdit = (userId: string) => {
     setSelectedUserId(userId);
     setShowUpdateModal(true);
   };
 
+  const getDepartmentName = (id: number) => {
+    const department = departments.find((dept) => dept.id === id);
+    return department ? department.departmentName : 'Unknown';
+  };
 
   useEffect(() => {
     fetchUsers();
+    fetchDepartments();
   }, []);
 
   return (
-    <div className="flex h-screen w-full" >
+    <div className="flex h-screen w-full">
       <div className="flex-1 p-6">
         <div className="flex justify-between items-center mb-4">
           <button
@@ -72,7 +83,7 @@ const UserTable: React.FC = () => {
         </div>
 
         <div className="bg-white shadow-md rounded-lg overflow-hidden">
-          <table className="w-screen text-center table-auto border-collapse border border-gray-200">
+          <table className="w-full text-center table-auto border-collapse border border-gray-200">
             <thead>
               <tr className="bg-gray-200">
                 <th className="border border-gray-300 p-3">Username</th>
@@ -93,15 +104,17 @@ const UserTable: React.FC = () => {
                   </td>
                   <td className="border border-gray-300 p-3">{user.contactNumber}</td>
                   <td className="border border-gray-300 p-3">{user.emailId}</td>
-                  <td className="border border-gray-300 p-3">{user.departmentId}</td>
+                  <td className="border border-gray-300 p-3">
+                    {getDepartmentName(user.departmentId)}
+                  </td>
                   <td className="border border-gray-300 p-3">{user.userType}</td>
                   <td className="border border-gray-300 p-3">
-                  <button
-                    onClick={() => handleEdit(user.id)}
-                    className="bg-blue-500 text-white px-3 py-1 rounded hover:bg-yellow-600 mr-2"
+                    <button
+                      onClick={() => handleEdit(user.id)}
+                      className="bg-blue-500 text-white px-3 py-1 rounded hover:bg-yellow-600 mr-2"
                     >
-                    Edit
-                  </button>
+                      Edit
+                    </button>
                     <button
                       onClick={() => handleDelete(user.id)}
                       className="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600"
@@ -120,8 +133,7 @@ const UserTable: React.FC = () => {
         onHide={() => setIsCreateModalOpen(false)}
         fetchUsers={fetchUsers}
       />
-
-{showUpdateModal && (
+      {showUpdateModal && (
         <UpdateUserModal
           show={showUpdateModal}
           onHide={() => setShowUpdateModal(false)}
@@ -129,11 +141,7 @@ const UserTable: React.FC = () => {
           fetchUsers={fetchUsers}
         />
       )}
-      
     </div>
-
-
-    
   );
 };
 

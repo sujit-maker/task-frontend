@@ -18,9 +18,6 @@ import {
   Settings2,
   TagsIcon,
   PersonStanding,
-  SettingsIcon,
-  PlayCircleIcon,
-  HomeIcon,
   Type,
 } from "lucide-react";
 import { BiBasket, BiCategory, BiHome, BiHomeAlt2, BiHomeHeart } from "react-icons/bi";
@@ -55,11 +52,6 @@ const items = [
     icon: Calendar,
   },
   {
-    title: "Service Type",
-    url: "/serviceType",
-    icon: GiSettingsKnobs,
-  },
-  {
     title: "Service Management",
     url: "/service",
     icon: Settings,
@@ -79,11 +71,7 @@ const items = [
     url: "/site",
     icon: BiBasket,
   },
-  {
-    title: "TaskType",
-    url: "/tasktype",
-    icon: Type,
-  },
+  
   {
     title: "Task Management",
     url: "/task",
