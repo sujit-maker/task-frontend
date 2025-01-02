@@ -22,7 +22,7 @@ const CategoryTable: React.FC = () => {
 
   const fetchCategories = async () => {
     try {
-      const response = await axios.get("http://localhost:8000/category");
+      const response = await axios.get("http://192.168.29.225:8000/category");
       setCategories(response.data);
     } catch (error) {
       console.error("Error fetching categories:", error);
@@ -32,7 +32,7 @@ const CategoryTable: React.FC = () => {
   const handleDelete = async (id: number) => {
     if (window.confirm("Are you sure you want to delete this category and its subcategories?")) {
       try {
-        await axios.delete(`http://localhost:8000/category/${id}`);
+        await axios.delete(`http://192.168.29.225:8000/category/${id}`);
         alert("Category deleted successfully!");
         fetchCategories();
       } catch (error) {
@@ -47,7 +47,7 @@ const CategoryTable: React.FC = () => {
 
   const handleCreate = async () => {
     try {
-      await axios.post("http://localhost:8000/category", formData);
+      await axios.post("http://192.168.29.225:8000/category", formData);
       alert("Category created successfully!");
       setIsCreateModalOpen(false);
       fetchCategories();
@@ -65,7 +65,7 @@ const CategoryTable: React.FC = () => {
       
       if (formData.categoryName !== selectedCategory.categoryName) {
         promises.push(
-          axios.put(`http://localhost:8000/category/${selectedCategory.id}`, {
+          axios.put(`http://192.168.29.225:8000/category/${selectedCategory.id}`, {
             categoryName: formData.categoryName,
           })
         );
@@ -87,14 +87,14 @@ const CategoryTable: React.FC = () => {
           if (existingSubCategory) {
             
             promises.push(
-              axios.put(`http://localhost:8000/subCategory/${existingSubCategory.id}`, {
+              axios.put(`http://192.168.29.225:8000/subCategory/${existingSubCategory.id}`, {
                 subCategoryName,
               })
             );
           } else {
             
             promises.push(
-              axios.post(`http://localhost:8000/subCategory`, {
+              axios.post(`http://192.168.29.225:8000/subCategory`, {
                 categoryId: selectedCategory.id,
                 subCategoryName,
               })
@@ -106,7 +106,7 @@ const CategoryTable: React.FC = () => {
         if (selectedCategory.subCategories.length > updatedSubCategories.length) {
           const removedSubCategories = selectedCategory.subCategories.slice(updatedSubCategories.length);
           removedSubCategories.forEach((sub) =>
-            promises.push(axios.delete(`http://localhost:8000/subCategory/${sub.id}`))
+            promises.push(axios.delete(`http://192.168.29.225:8000/subCategory/${sub.id}`))
           );
         }
       }

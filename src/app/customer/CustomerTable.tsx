@@ -30,7 +30,7 @@ const CustomerTable: React.FC = () => {
 
   const fetchCustomers = async () => {
     try {
-      const response = await axios.get("http://localhost:8000/customers");
+      const response = await axios.get("http://192.168.29.225:8000/customers");
       setCustomers(response.data);
     } catch (error) {
       console.error("Error fetching customers:", error);
@@ -44,7 +44,7 @@ const CustomerTable: React.FC = () => {
 
   const handleCreate = async () => {
     try {
-      await axios.post("http://localhost:8000/customers", formData);
+      await axios.post("http://192.168.29.225:8000/customers", formData);
       alert("Customer added successfully!");
       setIsCreateModalOpen(false);
       fetchCustomers();
@@ -57,7 +57,7 @@ const CustomerTable: React.FC = () => {
     if (selectedCustomer) {
       try {
         await axios.put(
-          `http://localhost:8000/customers/${selectedCustomer.id}`,
+          `http://192.168.29.225:8000/customers/${selectedCustomer.id}`,
           formData
         );
         alert("Customer updated successfully!");
@@ -72,7 +72,7 @@ const CustomerTable: React.FC = () => {
   const handleDelete = async (id: string) => {
     if (window.confirm("Are you sure you want to delete this customer?")) {
       try {
-        await axios.delete(`http://localhost:8000/customers/${id}`);
+        await axios.delete(`http://192.168.29.225:8000/customers/${id}`);
         alert("Customer deleted successfully!");
         fetchCustomers();
       } catch (error) {

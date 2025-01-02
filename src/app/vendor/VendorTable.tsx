@@ -30,7 +30,7 @@ const VendorTable: React.FC = () => {
 
   const fetchVendors = async () => {
     try {
-      const response = await axios.get("http://localhost:8000/vendors");
+      const response = await axios.get("http://192.168.29.225:8000/vendors");
       setVendors(response.data);
     } catch (error) {
       console.error("Error fetching vendors:", error);
@@ -39,7 +39,7 @@ const VendorTable: React.FC = () => {
 
   const handleDelete = async (id: number) => {
     try {
-      await axios.delete(`http://localhost:8000/vendors/${id}`);
+      await axios.delete(`http://192.168.29.225:8000/vendors/${id}`);
       alert("Vendor deleted successfully!");
       fetchVendors();
     } catch (error) {
@@ -49,7 +49,7 @@ const VendorTable: React.FC = () => {
 
   const handleCreate = async () => {
     try {
-      await axios.post("http://localhost:8000/vendors", formData);
+      await axios.post("http://192.168.29.225:8000/vendors", formData);
       alert("Vendor created successfully!");
       setIsCreateModalOpen(false);
       fetchVendors();
@@ -61,7 +61,7 @@ const VendorTable: React.FC = () => {
   const handleUpdate = async () => {
     if (!selectedVendor) return;
     try {
-      await axios.put(`http://localhost:8000/vendors/${selectedVendor.id}`, formData);
+      await axios.put(`http://192.168.29.225:8000/vendors/${selectedVendor.id}`, formData);
       alert("Vendor updated successfully!");
       setIsUpdateModalOpen(false);
       fetchVendors();

@@ -1,4 +1,4 @@
-"use client"
+"use client";
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 
@@ -6,13 +6,13 @@ import axios from "axios";
 interface Task {
   id: number;
   departmentId: number;
-  customerName: string;
-  customerAddress: string;
-  gstNo: string;
-  contactName: string;
-  contactNo: string;
-  emailId: string;
-  requirement: string;
+  customerId: number;
+  siteId: number;
+  workScope: string;
+  proposedDate: string;
+  priority: string;
+  remark: string;
+  status: string;
   serviceId: number;
 }
 
@@ -26,29 +26,41 @@ interface Service {
   serviceName: string;
 }
 
+interface Customer {
+  id: number;
+  customerName: string;
+}
+
+interface Site {
+  id: number;
+  siteName: string;
+}
+
 const TaskTable: React.FC = () => {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [departments, setDepartments] = useState<Department[]>([]);
-  const [services, setServices] = useState<Service[]>([]); // Store services based on department
+  const [services, setServices] = useState<Service[]>([]);
+  const [customers, setCustomers] = useState<Customer[]>([]);
+  const [sites, setSites] = useState<any[]>([]); // Array of sites
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState<Task>({
     id: 0,
     departmentId: 0,
-    customerName: '',
-    customerAddress: '',
-    gstNo: '',
-    contactName: '',
-    contactNo: '',
-    emailId: '',
-    requirement: '',
+    customerId: 0,
+    siteId: 0,
+    workScope: '',
+    proposedDate: '',
+    priority: '',
+    remark: '',
+    status: '',
     serviceId: 0
   });
 
   // Fetch tasks
   const fetchTasks = async () => {
     try {
-      const response = await axios.get("http://localhost:8000/tasks");
+      const response = await axios.get("http://192.168.29.225:8000/tasks");
       setTasks(response.data);
     } catch (error) {
       console.error("Error fetching tasks:", error);
@@ -58,7 +70,7 @@ const TaskTable: React.FC = () => {
   // Fetch departments
   const fetchDepartments = async () => {
     try {
-      const response = await axios.get("http://localhost:8000/departments");
+      const response = await axios.get("http://192.168.29.225:8000/departments");
       setDepartments(response.data);
     } catch (error) {
       console.error("Error fetching departments:", error);
@@ -68,18 +80,39 @@ const TaskTable: React.FC = () => {
   // Fetch services based on selected department
   const fetchServicesByDepartment = async (departmentId: number) => {
     try {
-      const response = await axios.get(`http://localhost:8000/tasks/services/${departmentId}`);
-      setServices(response.data); // Assuming response contains services based on departmentId
+      const response = await axios.get(`http://192.168.29.225:8000/tasks/services/${departmentId}`);
+      setServices(response.data);
     } catch (error) {
       console.error("Error fetching services:", error);
-      setServices([]); // Clear services if error occurs
+      setServices([]);
+    }
+  };
+
+  // Fetch customers
+  const fetchCustomers = async () => {
+    try {
+      const response = await axios.get("http://192.168.29.225:8000/customers");
+      setCustomers(response.data);
+    } catch (error) {
+      console.error("Error fetching customers:", error);
+    }
+  };
+
+  // Fetch sites based on selected customer
+  const fetchSitesByCustomer = async (customerId: number) => {
+    try {
+      const response = await axios.get(`http://192.168.29.225:8000/sites/customer/${customerId}`);
+      setSites(response.data);
+    } catch (error) {
+      console.error("Error fetching sites:", error);
+      setSites([]);
     }
   };
 
   // Handle task deletion
   const handleDelete = async (id: number) => {
     try {
-      await axios.delete(`http://localhost:8000/tasks/${id}`);
+      await axios.delete(`http://192.168.29.225:8000/tasks/${id}`);
       alert("Task deleted successfully!");
       fetchTasks();
     } catch (error) {
@@ -91,10 +124,10 @@ const TaskTable: React.FC = () => {
   const handleSave = async () => {
     try {
       if (isEditing) {
-        await axios.put(`http://localhost:8000/tasks/${formData.id}`, formData);
+        await axios.put(`http://192.168.29.225:8000/tasks/${formData.id}`, formData);
         alert("Task updated successfully!");
       } else {
-        await axios.post("http://localhost:8000/tasks", formData);
+        await axios.post("http://192.168.29.225:8000/tasks", formData);
         alert("Task created successfully!");
       }
       setIsModalOpen(false);
@@ -110,13 +143,13 @@ const TaskTable: React.FC = () => {
     setFormData(task || {
       id: 0,
       departmentId: 0,
-      customerName: '',
-      customerAddress: '',
-      gstNo: '',
-      contactName: '',
-      contactNo: '',
-      emailId: '',
-      requirement: '',
+      customerId: 0,
+      siteId: 0,
+      workScope: '',
+      proposedDate: '',
+      priority: '',
+      remark: '',
+      status: '',
       serviceId: 0
     });
     setIsModalOpen(true);
@@ -124,14 +157,20 @@ const TaskTable: React.FC = () => {
 
   // Handle department change
   const handleDepartmentChange = (departmentId: number) => {
-    setFormData({ ...formData, departmentId, serviceId: 0 }); // Reset serviceId when department changes
-    fetchServicesByDepartment(departmentId); // Fetch services based on selected department
+    setFormData({ ...formData, departmentId, serviceId: 0 });
+    fetchServicesByDepartment(departmentId);
   };
 
-  // Fetch tasks and departments when component mounts
+  // Handle customer change
+  const handleCustomerChange = (customerId: number) => {
+    setFormData({ ...formData, customerId, siteId: 0 }); // Reset siteId
+    fetchSitesByCustomer(customerId);
+  };
+
   useEffect(() => {
     fetchTasks();
     fetchDepartments();
+    fetchCustomers();
   }, []);
 
   return (
@@ -152,8 +191,8 @@ const TaskTable: React.FC = () => {
               <tr className="bg-gray-200">
                 <th className="border border-gray-300 p-3">ID</th>
                 <th className="border border-gray-300 p-3">Department</th>
-                <th className="border border-gray-300 p-3">Customer Name</th>
-                <th className="border border-gray-300 p-3">Contact No</th>
+                <th className="border border-gray-300 p-3">Customer</th>
+                <th className="border border-gray-300 p-3">Site</th>
                 <th className="border border-gray-300 p-3">Actions</th>
               </tr>
             </thead>
@@ -165,8 +204,12 @@ const TaskTable: React.FC = () => {
                     <td className="border border-gray-300 p-3">
                       {departments.find((dept) => dept.id === task.departmentId)?.departmentName}
                     </td>
-                    <td className="border border-gray-300 p-3">{task.customerName}</td>
-                    <td className="border border-gray-300 p-3">{task.contactNo}</td>
+                    <td className="border border-gray-300 p-3">
+                      {customers.find((customer) => customer.id === task.customerId)?.customerName}
+                    </td>
+                    <td className="border border-gray-300 p-3">
+                      {sites.find((site) => site.id === task.siteId)?.siteName}
+                    </td>
                     <td className="border border-gray-300 p-3">
                       <button
                         onClick={() => openModal(task)}
@@ -214,6 +257,7 @@ const TaskTable: React.FC = () => {
                 </option>
               ))}
             </select>
+
             <select
               value={formData.serviceId}
               onChange={(e) => setFormData({ ...formData, serviceId: parseInt(e.target.value, 10) })}
@@ -227,54 +271,71 @@ const TaskTable: React.FC = () => {
               ))}
             </select>
 
+            <select
+              value={formData.customerId}
+              onChange={(e) => handleCustomerChange(parseInt(e.target.value, 10))}
+              className="border p-2 rounded mb-4 w-full"
+            >
+              <option value={0}>Select Customer</option>
+              {customers.map((customer) => (
+                <option key={customer.id} value={customer.id}>
+                  {customer.customerName}
+                </option>
+              ))}
+            </select>
+
+            <select
+              value={formData.siteId}
+              onChange={(e) => setFormData({ ...formData, siteId: parseInt(e.target.value, 10) })}
+              className="border p-2 rounded mb-4 w-full"
+            >
+              <option value={0}>Select Site</option>
+              {sites.map((site) => (
+                <option key={site.id} value={site.id}>
+                  {site.siteName}
+                </option>
+              ))}
+            </select>
+
             <input
               type="text"
-              value={formData.customerName}
-              onChange={(e) => setFormData({ ...formData, customerName: e.target.value })}
-              placeholder="Customer Name"
+              value={formData.workScope}
+              onChange={(e) => setFormData({ ...formData, workScope: e.target.value })}
+              placeholder="Work Scope"
               className="border p-2 rounded mb-4 w-full"
             />
+            <input
+              type="date"
+              value={formData.proposedDate}
+              onChange={(e) => setFormData({ ...formData, proposedDate: e.target.value })}
+              className="border p-2 rounded mb-4 w-full"
+            />
+             <select
+              value={formData.priority}
+              onChange={(e) => setFormData({ ...formData, priority: e.target.value })}
+              className="border p-2 rounded mb-4 w-full"
+            >
+              <option value="High">High</option>
+              <option value="Mid">Mid</option>
+              <option value="Low">Low</option>
+            </select>
             <textarea
-              value={formData.customerAddress}
-              onChange={(e) => setFormData({ ...formData, customerAddress: e.target.value })}
-              placeholder="Customer Address"
+              value={formData.remark}
+              onChange={(e) => setFormData({ ...formData, remark: e.target.value })}
+              placeholder="Remark"
               className="border p-2 rounded mb-4 w-full"
             />
-            <input
-              type="text"
-              value={formData.gstNo}
-              onChange={(e) => setFormData({ ...formData, gstNo: e.target.value })}
-              placeholder="GST No"
+            <select
+              value={formData.status}
+              onChange={(e) => setFormData({ ...formData, status: e.target.value })}
               className="border p-2 rounded mb-4 w-full"
-            />
-            <input
-              type="text"
-              value={formData.contactName}
-              onChange={(e) => setFormData({ ...formData, contactName: e.target.value })}
-              placeholder="Contact Name"
-              className="border p-2 rounded mb-4 w-full"
-            />
-            <input
-              type="text"
-              value={formData.contactNo}
-              onChange={(e) => setFormData({ ...formData, contactNo: e.target.value })}
-              placeholder="Contact No"
-              className="border p-2 rounded mb-4 w-full"
-            />
-            <input
-              type="email"
-              value={formData.emailId}
-              onChange={(e) => setFormData({ ...formData, emailId: e.target.value })}
-              placeholder="Email ID"
-              className="border p-2 rounded mb-4 w-full"
-            />
-            <textarea
-              value={formData.requirement}
-              onChange={(e) => setFormData({ ...formData, requirement: e.target.value })}
-              placeholder="Requirement"
-              className="border p-2 rounded mb-4 w-full"
-            />
-           
+            >
+              <option value="">Select Status</option>
+              <option value="Open">Open</option>
+              <option value="Accepted">Accepted</option>
+              <option value="Assigned">Assigned</option>
+            </select>
+
             <button
               onClick={handleSave}
               className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 mr-2"

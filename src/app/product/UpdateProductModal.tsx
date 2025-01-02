@@ -20,7 +20,7 @@ const UpdateProductModal: React.FC<UpdateProductModalProps> = ({ show, onHide, p
     const fetchProductData = async () => {
       if (productId) {
         try {
-          const response = await axios.get(`http://localhost:8000/products/${productId}`);
+          const response = await axios.get(`http://192.168.29.225:8000/products/${productId}`);
           const productData = response.data;
           setProductName(productData.productName);
           setProductDescription(productData.productDescription);
@@ -49,7 +49,7 @@ const UpdateProductModal: React.FC<UpdateProductModalProps> = ({ show, onHide, p
         categoryId: parseInt(categoryId, 10),  // Convert to integer
       };
 
-      await axios.put(`http://localhost:8000/products/${productId}`, updatedProduct);
+      await axios.put(`http://192.168.29.225:8000/products/${productId}`, updatedProduct);
       fetchProducts();
       onHide();
     } catch (error) {
