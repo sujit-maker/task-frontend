@@ -22,7 +22,7 @@ const UpdateUserModal: React.FC<UpdateUserModalProps> = ({ show, onHide, userId,
     const fetchUserData = async () => {
       if (userId) {
         try {
-          const response = await axios.get(`http://192.168.29.225:8000/users/${userId}`);
+          const response = await axios.get(`http://localhost:8000/users/${userId}`);
           const userData = response.data;
           setUsername(userData.username);
           setFirstName(userData.firstName);
@@ -55,7 +55,7 @@ const UpdateUserModal: React.FC<UpdateUserModalProps> = ({ show, onHide, userId,
         userType,
       };
 
-      await axios.put(`http://192.168.29.225:8000/users/${userId}`, updatedUser);
+      await axios.put(`http://localhost:8000/users/${userId}`, updatedUser);
       fetchUsers();
       onHide();
     } catch (error) {

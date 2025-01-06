@@ -29,7 +29,7 @@ const UserTable: React.FC = () => {
 
   const fetchUsers = async () => {
     try {
-      const response = await axios.get('http://192.168.29.225:8000/users');
+      const response = await axios.get('http://localhost:8000/users');
       setUsers(response.data);
     } catch (error) {
       console.error('Error fetching users:', error);
@@ -38,7 +38,7 @@ const UserTable: React.FC = () => {
 
   const fetchDepartments = async () => {
     try {
-      const response = await axios.get('http://192.168.29.225:8000/departments');
+      const response = await axios.get('http://localhost:8000/departments');
       setDepartments(response.data);
     } catch (error) {
       console.error('Error fetching departments:', error);
@@ -47,7 +47,7 @@ const UserTable: React.FC = () => {
 
   const handleDelete = async (id: string) => {
     try {
-      await axios.delete(`http://192.168.29.225:8000/users/${id}`);
+      await axios.delete(`http://localhost:8000/users/${id}`);
       alert('User deleted successfully!');
       fetchUsers();
     } catch (error) {
@@ -96,7 +96,9 @@ const UserTable: React.FC = () => {
               </tr>
             </thead>
             <tbody>
-              {users.map((user) => (
+            {users
+              .filter((user) => user.username !== 'admin') 
+              .map((user) => (
                 <tr key={user.id} className="hover:bg-gray-100">
                   <td className="border border-gray-300 p-3">{user.username}</td>
                   <td className="border border-gray-300 p-3">

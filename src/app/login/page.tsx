@@ -1,24 +1,24 @@
 "use client";
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { toast, ToastContainer } from 'react-toastify';  // Corrected import
-import 'react-toastify/dist/ReactToastify.css';  // Import Toast styles
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 export default function LoginPage() {
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
-  const [errorMessage, setErrorMessage] = useState('');
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [errorMessage, setErrorMessage] = useState("");
   const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    setErrorMessage('');
+    setErrorMessage("");
 
-
-    const response = await fetch('http://192.168.29.225:8000/auth/login', {
-      method: 'POST',
+    
+    const response = await fetch("http://localhost:8000/auth/login", {
+      method: "POST",
       headers: {
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json",
       },
       body: JSON.stringify({
         username,
@@ -29,12 +29,35 @@ export default function LoginPage() {
     const data = await response.json();
 
     if (response.ok) {
+      
+      localStorage.setItem("access_token", data.access_token);
+
+      
       toast.success("Successfully logged in!");
-            setTimeout(() => {
-        router.push('/dashboard');
-      }, 1000);  
+
+      
+      setTimeout(() => {
+        switch (data.userType) {
+          case "HOD":
+            router.push("/dashboard"); 
+            break;
+          case "MANAGER":
+            router.push("/dashboard"); 
+            break;
+          case "EXECUTIVE":
+            router.push("/dashboard"); 
+            break;
+          case "SUPERADMIN":
+            router.push("/dashboard"); 
+            break;
+          default:
+            router.push("/"); 
+            break;
+        }
+      }, 1000); 
     } else {
-        toast.error("Inavlid Credentials");
+      
+      toast.error("Invalid credentials");
     }
   };
 
@@ -51,7 +74,9 @@ export default function LoginPage() {
 
         <form onSubmit={handleSubmit}>
           <div className="mb-4">
-            <label htmlFor="username" className="block text-sm font-medium text-gray-600">Username</label>
+            <label htmlFor="username" className="block text-sm font-medium text-gray-600">
+              Username
+            </label>
             <input
               id="username"
               type="text"
@@ -63,7 +88,9 @@ export default function LoginPage() {
           </div>
 
           <div className="mb-4">
-            <label htmlFor="password" className="block text-sm font-medium text-gray-600">Password</label>
+            <label htmlFor="password" className="block text-sm font-medium text-gray-600">
+              Password
+            </label>
             <input
               id="password"
               type="password"

@@ -3,18 +3,6 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 
 // Define interfaces
-interface Task {
-  id: number;
-  departmentId: number;
-  customerId: number;
-  siteId: number;
-  workScope: string;
-  proposedDate: string;
-  priority: string;
-  remark: string;
-  status: string;
-  serviceId: number;
-}
 
 interface Department {
   id: number;
@@ -27,6 +15,7 @@ interface Service {
 }
 
 interface Customer {
+  username: string;
   id: number;
   customerName: string;
 }
@@ -36,31 +25,58 @@ interface Site {
   siteName: string;
 }
 
+interface Task {
+  id: number;
+  departmentId: number;
+  serviceId: number;
+  customerId: number;
+  siteId: number;
+  workScope: string;
+  proposedDate: string;
+  priority: string;
+  remark: string;
+  status: string;
+  hodId: number;
+  managerId: number;
+  executiveId: number;
+  Site: Site;
+  Service: Service;
+}
+
 const TaskTable: React.FC = () => {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [departments, setDepartments] = useState<Department[]>([]);
   const [services, setServices] = useState<Service[]>([]);
   const [customers, setCustomers] = useState<Customer[]>([]);
-  const [sites, setSites] = useState<any[]>([]); // Array of sites
+  const [sites, setSites] = useState<any[]>([]);
+  const [executives, setExecutives] = useState<Customer[]>([]);
+  const [managers, setManagers] = useState<Customer[]>([]);
+  const [hods, setHods] = useState<Customer[]>([]);
+
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState<Task>({
     id: 0,
     departmentId: 0,
+    serviceId: 0,
     customerId: 0,
     siteId: 0,
-    workScope: '',
-    proposedDate: '',
-    priority: '',
-    remark: '',
-    status: '',
-    serviceId: 0
+    workScope: "",
+    proposedDate: "",
+    priority: "",
+    remark: "",
+    status: "",
+    hodId: 0,
+    managerId: 0,
+    executiveId: 0,
+    Site: { id: 0, siteName: "" },
+    Service: { id: 0, serviceName: "" },
   });
 
   // Fetch tasks
   const fetchTasks = async () => {
     try {
-      const response = await axios.get("http://192.168.29.225:8000/tasks");
+      const response = await axios.get("http://localhost:8000/tasks");
       setTasks(response.data);
     } catch (error) {
       console.error("Error fetching tasks:", error);
@@ -70,17 +86,51 @@ const TaskTable: React.FC = () => {
   // Fetch departments
   const fetchDepartments = async () => {
     try {
-      const response = await axios.get("http://192.168.29.225:8000/departments");
+      const response = await axios.get("http://localhost:8000/departments");
       setDepartments(response.data);
     } catch (error) {
       console.error("Error fetching departments:", error);
     }
   };
 
+  // Fetch executives
+  const fetchExecutives = async () => {
+    try {
+      const response = await axios.get(
+        "http://localhost:8000/users/executives"
+      );
+      setExecutives(response.data);
+    } catch (error) {
+      console.error("Error fetching executives:", error);
+    }
+  };
+
+  // Fetch managers
+  const fetchManagers = async () => {
+    try {
+      const response = await axios.get("http://localhost:8000/users/managers");
+      setManagers(response.data);
+    } catch (error) {
+      console.error("Error fetching managers:", error);
+    }
+  };
+
+  // Fetch HODs
+  const fetchHods = async () => {
+    try {
+      const response = await axios.get("http://localhost:8000/users/hods");
+      setHods(response.data);
+    } catch (error) {
+      console.error("Error fetching HODs:", error);
+    }
+  };
+
   // Fetch services based on selected department
   const fetchServicesByDepartment = async (departmentId: number) => {
     try {
-      const response = await axios.get(`http://192.168.29.225:8000/tasks/services/${departmentId}`);
+      const response = await axios.get(
+        `http://localhost:8000/tasks/services/${departmentId}`
+      );
       setServices(response.data);
     } catch (error) {
       console.error("Error fetching services:", error);
@@ -91,7 +141,7 @@ const TaskTable: React.FC = () => {
   // Fetch customers
   const fetchCustomers = async () => {
     try {
-      const response = await axios.get("http://192.168.29.225:8000/customers");
+      const response = await axios.get("http://localhost:8000/customers");
       setCustomers(response.data);
     } catch (error) {
       console.error("Error fetching customers:", error);
@@ -101,7 +151,9 @@ const TaskTable: React.FC = () => {
   // Fetch sites based on selected customer
   const fetchSitesByCustomer = async (customerId: number) => {
     try {
-      const response = await axios.get(`http://192.168.29.225:8000/sites/customer/${customerId}`);
+      const response = await axios.get(
+        `http://localhost:8000/sites/customer/${customerId}`
+      );
       setSites(response.data);
     } catch (error) {
       console.error("Error fetching sites:", error);
@@ -112,7 +164,7 @@ const TaskTable: React.FC = () => {
   // Handle task deletion
   const handleDelete = async (id: number) => {
     try {
-      await axios.delete(`http://192.168.29.225:8000/tasks/${id}`);
+      await axios.delete(`http://localhost:8000/tasks/${id}`);
       alert("Task deleted successfully!");
       fetchTasks();
     } catch (error) {
@@ -124,10 +176,10 @@ const TaskTable: React.FC = () => {
   const handleSave = async () => {
     try {
       if (isEditing) {
-        await axios.put(`http://192.168.29.225:8000/tasks/${formData.id}`, formData);
+        await axios.put(`http://localhost:8000/tasks/${formData.id}`, formData);
         alert("Task updated successfully!");
       } else {
-        await axios.post("http://192.168.29.225:8000/tasks", formData);
+        await axios.post("http://localhost:8000/tasks", formData);
         alert("Task created successfully!");
       }
       setIsModalOpen(false);
@@ -140,18 +192,25 @@ const TaskTable: React.FC = () => {
   // Open modal for adding or editing a task
   const openModal = (task: Task | null = null) => {
     setIsEditing(!!task);
-    setFormData(task || {
-      id: 0,
-      departmentId: 0,
-      customerId: 0,
-      siteId: 0,
-      workScope: '',
-      proposedDate: '',
-      priority: '',
-      remark: '',
-      status: '',
-      serviceId: 0
-    });
+    setFormData(
+      task || {
+        id: 0,
+        departmentId: 0,
+        serviceId: 0,
+        customerId: 0,
+        siteId: 0,
+        workScope: "",
+        proposedDate: "",
+        priority: "",
+        remark: "",
+        status: "",
+        hodId: 0,
+        managerId: 0,
+        executiveId: 0,
+        Site: { id: 0, siteName: "" },
+        Service: { id: 0, serviceName: "" },
+      }
+    );
     setIsModalOpen(true);
   };
 
@@ -171,6 +230,9 @@ const TaskTable: React.FC = () => {
     fetchTasks();
     fetchDepartments();
     fetchCustomers();
+    fetchExecutives();
+    fetchManagers();
+    fetchHods();
   }, []);
 
   return (
@@ -191,8 +253,12 @@ const TaskTable: React.FC = () => {
               <tr className="bg-gray-200">
                 <th className="border border-gray-300 p-3">ID</th>
                 <th className="border border-gray-300 p-3">Department</th>
+                <th className="border border-gray-300 p-3">Service</th>
                 <th className="border border-gray-300 p-3">Customer</th>
                 <th className="border border-gray-300 p-3">Site</th>
+                <th className="border border-gray-300 p-3">HOD</th>
+                <th className="border border-gray-300 p-3">Manager</th>
+                <th className="border border-gray-300 p-3">Executive</th>
                 <th className="border border-gray-300 p-3">Actions</th>
               </tr>
             </thead>
@@ -202,14 +268,39 @@ const TaskTable: React.FC = () => {
                   <tr key={task.id} className="hover:bg-gray-100">
                     <td className="border border-gray-300 p-3">{task.id}</td>
                     <td className="border border-gray-300 p-3">
-                      {departments.find((dept) => dept.id === task.departmentId)?.departmentName}
+                      {
+                        departments.find(
+                          (dept) => dept.id === task.departmentId
+                        )?.departmentName
+                      }
                     </td>
                     <td className="border border-gray-300 p-3">
-                      {customers.find((customer) => customer.id === task.customerId)?.customerName}
+                      {task.Service.serviceName}
                     </td>
                     <td className="border border-gray-300 p-3">
-                      {sites.find((site) => site.id === task.siteId)?.siteName}
+                      {
+                        customers.find(
+                          (customer) => customer.id === task.customerId
+                        )?.customerName
+                      }
                     </td>
+                    <td className="border border-gray-300 p-3">
+                      {task.Site.siteName}
+                    </td>
+                    <td className="border border-gray-300 p-3">
+                      {hods.find((hod) => hod.id === task.hodId)?.username ||
+                        "N/A"}
+                    </td>
+                    <td className="border border-gray-300 p-3">
+                      {managers.find((manager) => manager.id === task.managerId)
+                        ?.username || "N/A"}
+                    </td>
+                    <td className="border border-gray-300 p-3">
+                      {executives.find(
+                        (executive) => executive.id === task.executiveId
+                      )?.username || "N/A"}
+                    </td>
+
                     <td className="border border-gray-300 p-3">
                       <button
                         onClick={() => openModal(task)}
@@ -240,14 +331,16 @@ const TaskTable: React.FC = () => {
 
       {isModalOpen && (
         <div className="fixed inset-0 flex items-center justify-center bg-gray-500 bg-opacity-50">
-          <div className="bg-white p-6 rounded shadow-lg w-96">
+          <div className="bg-white p-6 rounded shadow-lg w-96 max-h-[90vh] overflow-y-auto">
             <h2 className="text-lg font-semibold mb-4">
               {isEditing ? "Edit Task" : "Add Task"}
             </h2>
 
             <select
               value={formData.departmentId}
-              onChange={(e) => handleDepartmentChange(parseInt(e.target.value, 10))}
+              onChange={(e) =>
+                handleDepartmentChange(parseInt(e.target.value, 10))
+              }
               className="border p-2 rounded mb-4 w-full"
             >
               <option value={0}>Select Department</option>
@@ -260,7 +353,12 @@ const TaskTable: React.FC = () => {
 
             <select
               value={formData.serviceId}
-              onChange={(e) => setFormData({ ...formData, serviceId: parseInt(e.target.value, 10) })}
+              onChange={(e) =>
+                setFormData({
+                  ...formData,
+                  serviceId: parseInt(e.target.value, 10),
+                })
+              }
               className="border p-2 rounded mb-4 w-full"
             >
               <option value={0}>Select Service</option>
@@ -273,7 +371,9 @@ const TaskTable: React.FC = () => {
 
             <select
               value={formData.customerId}
-              onChange={(e) => handleCustomerChange(parseInt(e.target.value, 10))}
+              onChange={(e) =>
+                handleCustomerChange(parseInt(e.target.value, 10))
+              }
               className="border p-2 rounded mb-4 w-full"
             >
               <option value={0}>Select Customer</option>
@@ -286,7 +386,12 @@ const TaskTable: React.FC = () => {
 
             <select
               value={formData.siteId}
-              onChange={(e) => setFormData({ ...formData, siteId: parseInt(e.target.value, 10) })}
+              onChange={(e) =>
+                setFormData({
+                  ...formData,
+                  siteId: parseInt(e.target.value, 10),
+                })
+              }
               className="border p-2 rounded mb-4 w-full"
             >
               <option value={0}>Select Site</option>
@@ -300,19 +405,82 @@ const TaskTable: React.FC = () => {
             <input
               type="text"
               value={formData.workScope}
-              onChange={(e) => setFormData({ ...formData, workScope: e.target.value })}
+              onChange={(e) =>
+                setFormData({ ...formData, workScope: e.target.value })
+              }
               placeholder="Work Scope"
               className="border p-2 rounded mb-4 w-full"
             />
             <input
               type="date"
               value={formData.proposedDate}
-              onChange={(e) => setFormData({ ...formData, proposedDate: e.target.value })}
+              onChange={(e) =>
+                setFormData({ ...formData, proposedDate: e.target.value })
+              }
               className="border p-2 rounded mb-4 w-full"
             />
-             <select
+            <select
+              value={formData.hodId}
+              onChange={(e) =>
+                setFormData({
+                  ...formData,
+                  hodId: parseInt(e.target.value, 10),
+                })
+              }
+              className="border p-2 rounded mb-4 w-full max-h-40 overflow-y-auto"
+            >
+              <option value={0}>Select HOD</option>
+              {hods.map((hod) => (
+                <option key={hod.id} value={hod.id}>
+                  {hod.username}{" "}
+                  {/* Display username instead of customerName */}
+                </option>
+              ))}
+            </select>
+
+            <select
+              value={formData.managerId}
+              onChange={(e) =>
+                setFormData({
+                  ...formData,
+                  managerId: parseInt(e.target.value, 10),
+                })
+              }
+              className="border p-2 rounded mb-4 w-full max-h-40 overflow-y-auto"
+            >
+              <option value={0}>Select Manager</option>
+              {managers.map((manager) => (
+                <option key={manager.id} value={manager.id}>
+                  {manager.username}{" "}
+                  {/* Display username instead of customerName */}
+                </option>
+              ))}
+            </select>
+
+            <select
+              value={formData.executiveId}
+              onChange={(e) =>
+                setFormData({
+                  ...formData,
+                  executiveId: parseInt(e.target.value, 10),
+                })
+              }
+              className="border p-2 rounded mb-4 w-full max-h-40 overflow-y-auto"
+            >
+              <option value={0}>Select Executive</option>
+              {executives.map((executive) => (
+                <option key={executive.id} value={executive.id}>
+                  {executive.username}{" "}
+                  {/* Display username instead of customerName */}
+                </option>
+              ))}
+            </select>
+
+            <select
               value={formData.priority}
-              onChange={(e) => setFormData({ ...formData, priority: e.target.value })}
+              onChange={(e) =>
+                setFormData({ ...formData, priority: e.target.value })
+              }
               className="border p-2 rounded mb-4 w-full"
             >
               <option value="High">High</option>
@@ -321,19 +489,20 @@ const TaskTable: React.FC = () => {
             </select>
             <textarea
               value={formData.remark}
-              onChange={(e) => setFormData({ ...formData, remark: e.target.value })}
+              onChange={(e) =>
+                setFormData({ ...formData, remark: e.target.value })
+              }
               placeholder="Remark"
               className="border p-2 rounded mb-4 w-full"
             />
             <select
               value={formData.status}
-              onChange={(e) => setFormData({ ...formData, status: e.target.value })}
+              onChange={(e) =>
+                setFormData({ ...formData, status: e.target.value })
+              }
               className="border p-2 rounded mb-4 w-full"
             >
-              <option value="">Select Status</option>
               <option value="Open">Open</option>
-              <option value="Accepted">Accepted</option>
-              <option value="Assigned">Assigned</option>
             </select>
 
             <button

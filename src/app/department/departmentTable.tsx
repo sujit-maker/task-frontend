@@ -23,7 +23,7 @@ const DepartmentTable: React.FC = () => {
   const fetchDepartments = async () => {
     setLoading(true);
     try {
-      const response = await axios.get("http://192.168.29.225:8000/departments");
+      const response = await axios.get("http://localhost:8000/departments");
       setDepartments(response.data);
     } catch (error) {
       console.error("Error fetching departments:", error);
@@ -35,7 +35,7 @@ const DepartmentTable: React.FC = () => {
   
   const handleAdd = async () => {
     try {
-      await axios.post("http://192.168.29.225:8000/departments", formData);
+      await axios.post("http://localhost:8000/departments", formData);
       alert("Department added successfully!");
       setIsModalOpen(false);
       fetchDepartments();
@@ -48,7 +48,7 @@ const DepartmentTable: React.FC = () => {
   const handleUpdate = async () => {
     try {
       await axios.put(
-        `http://192.168.29.225:8000/departments/${formData.id}`,
+        `http://localhost:8000/departments/${formData.id}`,
         formData
       );
       alert("Department updated successfully!");
@@ -63,7 +63,7 @@ const DepartmentTable: React.FC = () => {
   const handleDelete = async (id: number) => {
     if (window.confirm("Are you sure you want to delete this department?")) {
       try {
-        await axios.delete(`http://192.168.29.225:8000/departments/${id}`);
+        await axios.delete(`http://localhost:8000/departments/${id}`);
         alert("Department deleted successfully!");
         fetchDepartments();
       } catch (error) {
