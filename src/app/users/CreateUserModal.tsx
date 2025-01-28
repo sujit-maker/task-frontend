@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
+import { useAuth } from "../hooks/useAuth";
 
 interface CreateUserModalProps {
   show: boolean;
@@ -13,16 +14,18 @@ const CreateUserModal: React.FC<CreateUserModalProps> = ({
   fetchUsers,
 }) => {
   const [username, setUsername] = useState<string>("");
+  const { userId } = useAuth();
   const [firstName, setFirstName] = useState<string>("");
   const [lastName, setLastName] = useState<string>("");
   const [contactNumber, setContactNumber] = useState<string>("");
   const [emailId, setEmailId] = useState<string>("");
-  const [departmentId, setDepartmentId] = useState<number | string>(""); 
-  const [departments, setDepartments] = useState<{ id: number; departmentName: string }[]>([]);
+  const [departmentIds, setDepartmentIds] = useState<number[]>([]); // Now an array for multiple departments
+  const [departments, setDepartments] = useState<
+    { id: number; departmentName: string }[]
+  >([]);
   const [userType, setUserType] = useState<string>("");
   const [password, setPassword] = useState<string>("");
 
-  // Fetch departments
   useEffect(() => {
     const fetchDepartments = async () => {
       try {
@@ -37,52 +40,78 @@ const CreateUserModal: React.FC<CreateUserModalProps> = ({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    const loggedInUserType = localStorage.getItem("userType");
+    const loggedInUserId = userId;
+
     try {
+      const loggedInUserField =
+        loggedInUserType === "HOD"
+          ? { hodId: loggedInUserId }
+          : loggedInUserType === "MANAGER"
+          ? { managerId: loggedInUserId }
+          : {};
+
       const newUser = {
         username,
         firstName,
         lastName,
         contactNumber,
         emailId,
-        departmentId,  
+        departmentIds, // Send departmentIds array instead of a single departmentId
         userType,
         password,
+        ...loggedInUserField,
       };
+
       await axios.post("http://localhost:8000/users", newUser);
+
       fetchUsers();
       onHide();
+      resetForm();
     } catch (error) {
       console.error("Error creating user:", error);
     }
   };
 
-   // Function to reset the form
-   const resetForm = () => {
+  const resetForm = () => {
     setUsername("");
     setFirstName("");
     setLastName("");
     setContactNumber("");
     setEmailId("");
-    setDepartmentId("");
+    setDepartmentIds([]); // Reset to an empty array for multiple departments
     setUserType("");
     setPassword("");
   };
 
   const handleClose = () => {
-    resetForm(); 
+    resetForm();
     onHide();
+  };
+
+  const handleDepartmentChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const id = Number(e.target.value);
+    setDepartmentIds((prev) =>
+      e.target.checked ? [...prev, id] : prev.filter((department) => department !== id)
+    );
   };
 
   return (
     <div
       className={`fixed inset-0 bg-gray-600 bg-opacity-50 flex justify-center items-center z-50 transition-opacity ${
-        show ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
+        show
+          ? "opacity-100 pointer-events-auto"
+          : "opacity-0 pointer-events-none"
       }`}
     >
       <div className="bg-white rounded-lg shadow-lg w-full max-w-3xl p-6 md:p-8">
         <div className="flex justify-between items-center mb-6">
           <h3 className="text-xl font-semibold text-gray-800">Add New User</h3>
-          <button onClick={onHide} className="text-gray-500 hover:text-gray-700">
+          <button
+            onClick={onHide}
+            className="text-gray-500 hover:text-gray-700"
+          >
             <svg
               xmlns="http://www.w3.org/2000/svg"
               fill="none"
@@ -102,6 +131,7 @@ const CreateUserModal: React.FC<CreateUserModalProps> = ({
 
         <form onSubmit={handleSubmit}>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {/* User form fields */}
             <div className="flex flex-col">
               <label className="text-sm font-medium text-gray-700">Username</label>
               <input
@@ -114,7 +144,6 @@ const CreateUserModal: React.FC<CreateUserModalProps> = ({
               />
             </div>
 
-            {/* Other form fields... */}
             <div className="flex flex-col">
               <label className="text-sm font-medium text-gray-700">Password</label>
               <input
@@ -123,6 +152,7 @@ const CreateUserModal: React.FC<CreateUserModalProps> = ({
                 placeholder="Enter password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
+                autoComplete="password"
                 required
               />
             </div>
@@ -176,23 +206,6 @@ const CreateUserModal: React.FC<CreateUserModalProps> = ({
             </div>
 
             <div className="flex flex-col">
-              <label className="text-sm font-medium text-gray-700">Department</label>
-              <select
-                value={departmentId}
-                onChange={(e) => setDepartmentId(Number(e.target.value))}
-                className="p-3 border border-gray-300 rounded-md mt-1"
-                required
-              >
-                <option value="">Select Department</option>
-                {departments.map((dept) => (
-                  <option key={dept.id} value={dept.id}>
-                    {dept.departmentName}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div className="flex flex-col">
               <label className="text-sm font-medium text-gray-700">User Type</label>
               <select
                 className="p-3 border border-gray-300 rounded-md mt-1"
@@ -208,6 +221,40 @@ const CreateUserModal: React.FC<CreateUserModalProps> = ({
                 <option value="EXECUTIVE">EXECUTIVE</option>
               </select>
             </div>
+          </div>
+
+          <div className="flex flex-col">
+            <label className="text-sm font-medium text-gray-700">Department</label>
+            {userType === "HOD" || userType === "MANAGER" ? (
+              <div className="space-y-2">
+                {departments.map((dept) => (
+                  <div key={dept.id} className="flex items-center">
+                    <input
+                      type="checkbox"
+                      value={dept.id}
+                      checked={departmentIds.includes(dept.id)}
+                      onChange={handleDepartmentChange}
+                      className="mr-2"
+                    />
+                    <label>{dept.departmentName}</label>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <select
+                value={departmentIds[0] || ""}
+                onChange={(e) => setDepartmentIds([Number(e.target.value)])}
+                className="p-3 border border-gray-300 rounded-md mt-1"
+                required
+              >
+                <option value="">Select Department</option>
+                {departments.map((dept) => (
+                  <option key={dept.id} value={dept.id}>
+                    {dept.departmentName}
+                  </option>
+                ))}
+              </select>
+            )}
           </div>
 
           <div className="flex justify-end space-x-4 mt-6">

@@ -13,53 +13,55 @@ export default function LoginPage() {
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setErrorMessage("");
-
-    
-    const response = await fetch("http://localhost:8000/auth/login", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        username,
-        password,
-      }),
-    });
-
-    const data = await response.json();
-
-    if (response.ok) {
-      
+  
+    try {
+      const response = await fetch("http://localhost:8000/auth/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          username,
+          password,
+        }),
+      });
+  
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => null);
+        const errorMessage = errorData?.message || "Invalid credentials";
+        throw new Error(errorMessage);
+      }
+  
+      const data = await response.json();
+      console.log("Login Response Data:", data);
+  
+      // Use the correct key `userId` and convert it to string
       localStorage.setItem("access_token", data.access_token);
-
-      
+      localStorage.setItem("userId", data.userId.toString());
+      localStorage.setItem("userType", data.userType);
+  
       toast.success("Successfully logged in!");
-
-      
+  
       setTimeout(() => {
         switch (data.userType) {
           case "HOD":
-            router.push("/dashboard"); 
-            break;
           case "MANAGER":
-            router.push("/dashboard"); 
-            break;
           case "EXECUTIVE":
-            router.push("/dashboard"); 
-            break;
           case "SUPERADMIN":
-            router.push("/dashboard"); 
+            router.push("/dashboard"); // Navigate to dashboard for all roles
             break;
           default:
-            router.push("/"); 
+            router.push("/"); // Default fallback
             break;
         }
-      }, 1000); 
-    } else {
-      
-      toast.error("Invalid credentials");
+      }, 1000);
+    } catch (error: any) {
+      console.error("Login Error:", error.message);
+      setErrorMessage(error.message);
+      toast.error(error.message || "Invalid credentials");
     }
   };
+  
 
   return (
     <div className="flex justify-center items-center h-screen bg-gray-100">

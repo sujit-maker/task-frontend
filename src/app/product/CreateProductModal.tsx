@@ -7,7 +7,6 @@ interface CreateProductModalProps {
   fetchProducts: () => void;
 }
 
-
 const CreateProductModal: React.FC<CreateProductModalProps> = ({
   show,
   onHide,
@@ -19,11 +18,12 @@ const CreateProductModal: React.FC<CreateProductModalProps> = ({
   const [HSN, setHSN] = useState<string>("");
   const [categoryId, setCategoryId] = useState<string>("");
   const [subCategoryId, setSubCategoryId] = useState<string>("");
-  const [selectedCategoryName, setSelectedCategoryName] = useState<string>("");
-  const [selectedSubCategoryName, setSelectedSubCategoryName] = useState<string>("");
-
-  const [categories, setCategories] = useState<{ id: number; categoryName: string; subCategories: { id: number; subCategoryName: string }[] }[]>([]);
-  const [subCategories, setSubCategories] = useState<{ id: number; subCategoryName: string }[]>([]);
+  const [categories, setCategories] = useState<
+    { id: number; categoryName: string; subCategories: { id: number; subCategoryName: string }[] }[]
+  >([]);
+  const [subCategories, setSubCategories] = useState<{ id: number; subCategoryName: string }[]>(
+    []
+  );
 
   useEffect(() => {
     const fetchCategories = async () => {
@@ -37,45 +37,30 @@ const CreateProductModal: React.FC<CreateProductModalProps> = ({
     fetchCategories();
   }, []);
 
-  const fetchSubCategories = async (categoryId: string) => {
-    try {
-      const category = categories.find(cat => cat.id.toString() === categoryId);
-      if (category) {
-        setSubCategories(category.subCategories);
-      } else {
-        setSubCategories([]);
-      }
-    } catch (error) {
-      console.error("Error fetching subcategories:", error);
-    }
+  const fetchSubCategories = (categoryId: string) => {
+    const category = categories.find((cat) => cat.id.toString() === categoryId);
+    setSubCategories(category ? category.subCategories : []);
+  };
+
+  const resetForm = () => {
+    setProductId("");
+    setProductName("");
+    setProductDescription("");
+    setHSN("");
+    setCategoryId("");
+    setSubCategoryId("");
+    setSubCategories([]);
   };
 
   const handleCategoryChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const selectedCategoryId = e.target.value;
-    const selectedCategory = categories.find(
-      (cat) => cat.id === parseInt(selectedCategoryId, 10)
-    );
-
- 
-    if (selectedCategory) {
-      setCategoryId(selectedCategoryId);
-      setSelectedCategoryName(selectedCategory.categoryName); // Update the name of the selected category
-      setSubCategoryId(""); // Reset subcategory selection
-      setSelectedSubCategoryName(""); // Reset subcategory name
-      fetchSubCategories(selectedCategoryId); // Fetch subcategories for selected category
-    }
+    setCategoryId(selectedCategoryId);
+    fetchSubCategories(selectedCategoryId);
+    setSubCategoryId(""); // Reset subcategory selection
   };
 
   const handleSubCategoryChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const selectedSubCategoryId = e.target.value;
-    const selectedSubCategory = subCategories.find(
-      (sub) => sub.id === parseInt(selectedSubCategoryId, 10)
-    );
-
-    if (selectedSubCategory) {
-      setSubCategoryId(selectedSubCategoryId);
-      setSelectedSubCategoryName(selectedSubCategory.subCategoryName); // Update the name of the selected subcategory
-    }
+    setSubCategoryId(e.target.value);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -91,12 +76,17 @@ const CreateProductModal: React.FC<CreateProductModalProps> = ({
       };
       await axios.post("http://localhost:8000/products", newProduct);
       fetchProducts();
+      resetForm();
       onHide();
     } catch (error) {
       console.error("Error creating product:", error);
     }
   };
 
+  const handleCancel = () => {
+    resetForm();
+    onHide();
+  };
 
   return (
     <div
@@ -105,10 +95,9 @@ const CreateProductModal: React.FC<CreateProductModalProps> = ({
       }`}
     >
       <div className="bg-white rounded-lg shadow-lg w-full max-w-3xl p-6 md:p-8">
-        {/* Header */}
         <div className="flex justify-between items-center mb-6">
           <h3 className="text-xl font-semibold text-gray-800">Add New Product</h3>
-          <button onClick={onHide} className="text-gray-500 hover:text-gray-700">
+          <button onClick={handleCancel} className="text-gray-500 hover:text-gray-700">
             <svg
               xmlns="http://www.w3.org/2000/svg"
               fill="none"
@@ -126,11 +115,10 @@ const CreateProductModal: React.FC<CreateProductModalProps> = ({
           </button>
         </div>
 
-        {/* Form */}
         <form onSubmit={handleSubmit}>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="flex flex-col">
-              <label className="text-sm font-medium text-gray-700">ProductId</label>
+              <label className="text-sm font-medium text-gray-700">Product ID</label>
               <input
                 type="text"
                 className="p-3 border border-gray-300 rounded-md mt-1"
@@ -142,11 +130,11 @@ const CreateProductModal: React.FC<CreateProductModalProps> = ({
             </div>
 
             <div className="flex flex-col">
-              <label className="text-sm font-medium text-gray-700">ProductName</label>
+              <label className="text-sm font-medium text-gray-700">Product Name</label>
               <input
                 type="text"
                 className="p-3 border border-gray-300 rounded-md mt-1"
-                placeholder="Enter product name"
+                placeholder="Enter Product Name"
                 value={productName}
                 onChange={(e) => setProductName(e.target.value)}
                 required
@@ -177,50 +165,45 @@ const CreateProductModal: React.FC<CreateProductModalProps> = ({
               />
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {/* Category Dropdown */}
-              <div className="flex flex-col">
-                <label className="text-sm font-medium text-gray-700">Category</label>
-                <select
-                  className="p-3 border border-gray-300 rounded-md mt-1"
-                  value={categoryId}
-                  onChange={handleCategoryChange}
-                  required
-                >
-                  <option value="">Select Category</option>
-                  {categories.map((category) => (
-                    <option key={category.id} value={category.id}>
-                      {category.categoryName}
-                    </option>
-                  ))}
-                </select>
-              </div>
+            <div className="flex flex-col">
+              <label className="text-sm font-medium text-gray-700">Category</label>
+              <select
+                className="p-3 border border-gray-300 rounded-md mt-1"
+                value={categoryId}
+                onChange={handleCategoryChange}
+                required
+              >
+                <option value="">Select Category</option>
+                {categories.map((category) => (
+                  <option key={category.id} value={category.id}>
+                    {category.categoryName}
+                  </option>
+                ))}
+              </select>
+            </div>
 
-              {/* Subcategory Dropdown */}
-              <div className="flex flex-col">
-                <label className="text-sm font-medium text-gray-700">Subcategory</label>
-                <select
-                  className="p-3 border border-gray-300 rounded-md mt-1"
-                  value={subCategoryId}
-                  onChange={handleSubCategoryChange}
-                  required
-                >
-                  <option value="">Select Subcategory</option>
-                  {subCategories.map((subCategory) => (
-                    <option key={subCategory.id} value={subCategory.id}>
-                      {subCategory.subCategoryName}
-                    </option>
-                  ))}
-                </select>
-              </div>
+            <div className="flex flex-col">
+              <label className="text-sm font-medium text-gray-700">Subcategory</label>
+              <select
+                className="p-3 border border-gray-300 rounded-md mt-1"
+                value={subCategoryId}
+                onChange={handleSubCategoryChange}
+                required
+              >
+                <option value="">Select Subcategory</option>
+                {subCategories.map((subCategory) => (
+                  <option key={subCategory.id} value={subCategory.id}>
+                    {subCategory.subCategoryName}
+                  </option>
+                ))}
+              </select>
             </div>
           </div>
 
-          {/* Buttons */}
           <div className="flex justify-end space-x-4 mt-6">
             <button
               type="button"
-              onClick={onHide}
+              onClick={handleCancel}
               className="px-6 py-2 text-sm font-medium text-gray-600 bg-gray-200 rounded-md hover:bg-gray-300"
             >
               Cancel

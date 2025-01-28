@@ -131,8 +131,8 @@ const SiteTable: React.FC = () => {
           </button>
         </div>
         <div className="overflow-x-auto">
-          <table className="w-full text-left table-auto border-collapse border border-gray-200">
-            <thead>
+        <table className="w-screen text-center border-collapse border border-gray-200" style={{width:"1200px"}}>
+        <thead>
               <tr className="bg-gray-200">
                 <th className="border border-gray-300 px-4 py-2">Site ID</th>
                 <th className="border border-gray-300 px-4 py-2">Site Name</th>

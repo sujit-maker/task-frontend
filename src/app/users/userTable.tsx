@@ -11,7 +11,7 @@ interface User {
   lastName: string;
   contactNumber: string;
   emailId: string;
-  departmentId: number;
+  departments: Department[];  // departments is now an array of Department objects
   userType: string;
 }
 
@@ -30,6 +30,7 @@ const UserTable: React.FC = () => {
   const fetchUsers = async () => {
     try {
       const response = await axios.get('http://localhost:8000/users');
+      console.log('Fetched users:', response.data);  // Log users data
       setUsers(response.data);
     } catch (error) {
       console.error('Error fetching users:', error);
@@ -39,6 +40,7 @@ const UserTable: React.FC = () => {
   const fetchDepartments = async () => {
     try {
       const response = await axios.get('http://localhost:8000/departments');
+      console.log('Fetched departments:', response.data);
       setDepartments(response.data);
     } catch (error) {
       console.error('Error fetching departments:', error);
@@ -60,9 +62,12 @@ const UserTable: React.FC = () => {
     setShowUpdateModal(true);
   };
 
-  const getDepartmentName = (id: number) => {
-    const department = departments.find((dept) => dept.id === id);
-    return department ? department.departmentName : 'Unknown';
+  const getDepartmentName = (departments: Department[]) => {
+    if (departments.length > 0) {
+      return departments.map((dept) => dept.departmentName).join(', '); // Join multiple departments
+    } else {
+      return 'Unknown';
+    }
   };
 
   useEffect(() => {
@@ -83,53 +88,53 @@ const UserTable: React.FC = () => {
         </div>
 
         <div className="bg-white shadow-md rounded-lg overflow-hidden">
-          <table className="w-full text-center table-auto border-collapse border border-gray-200">
+          <table className="w-screen text-center border-collapse border border-gray-200" style={{ width: '1200px' }}>
             <thead>
               <tr className="bg-gray-200">
                 <th className="border border-gray-300 p-3">Username</th>
                 <th className="border border-gray-300 p-3">Name</th>
-                <th className="border border-gray-300 p-3">Contact</th>
-                <th className="border border-gray-300 p-3">Email</th>
                 <th className="border border-gray-300 p-3">Department</th>
                 <th className="border border-gray-300 p-3">User Type</th>
                 <th className="border border-gray-300 p-3">Actions</th>
               </tr>
             </thead>
             <tbody>
-            {users
-              .filter((user) => user.username !== 'admin') 
-              .map((user) => (
-                <tr key={user.id} className="hover:bg-gray-100">
-                  <td className="border border-gray-300 p-3">{user.username}</td>
-                  <td className="border border-gray-300 p-3">
-                    {user.firstName} {user.lastName}
-                  </td>
-                  <td className="border border-gray-300 p-3">{user.contactNumber}</td>
-                  <td className="border border-gray-300 p-3">{user.emailId}</td>
-                  <td className="border border-gray-300 p-3">
-                    {getDepartmentName(user.departmentId)}
-                  </td>
-                  <td className="border border-gray-300 p-3">{user.userType}</td>
-                  <td className="border border-gray-300 p-3">
-                    <button
-                      onClick={() => handleEdit(user.id)}
-                      className="bg-blue-500 text-white px-3 py-1 rounded hover:bg-yellow-600 mr-2"
-                    >
-                      Edit
-                    </button>
-                    <button
-                      onClick={() => handleDelete(user.id)}
-                      className="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600"
-                    >
-                      Delete
-                    </button>
-                  </td>
-                </tr>
-              ))}
+              {users
+                .filter((user) => user.username !== 'admin') // Skip the admin user
+                .map((user) => (
+                  <tr key={user.id} className="hover:bg-gray-100">
+                    <td className="border border-gray-300 p-3">{user.username}</td>
+                    <td className="border border-gray-300 p-3">
+                      {user.firstName} {user.lastName}
+                    </td>
+
+                    {/* Render department name */}
+                    <td className="border border-gray-300 p-3">
+                      {user.departments.length > 0 ? getDepartmentName(user.departments) : 'Loading...'}
+                    </td>
+
+                    <td className="border border-gray-300 p-3">{user.userType}</td>
+                    <td className="border border-gray-300 p-3">
+                      <button
+                        onClick={() => handleEdit(user.id)}
+                        className="bg-blue-500 text-white px-3 py-1 rounded hover:bg-yellow-600 mr-2"
+                      >
+                        Edit
+                      </button>
+                      <button
+                        onClick={() => handleDelete(user.id)}
+                        className="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600"
+                      >
+                        Delete
+                      </button>
+                    </td>
+                  </tr>
+                ))}
             </tbody>
           </table>
         </div>
       </div>
+
       <CreateUserModal
         show={isCreateModalOpen}
         onHide={() => setIsCreateModalOpen(false)}

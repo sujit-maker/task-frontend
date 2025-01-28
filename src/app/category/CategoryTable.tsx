@@ -1,4 +1,4 @@
-"use client"
+"use client";
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 
@@ -10,7 +10,7 @@ interface SubCategory {
 interface Category {
   id: number;
   categoryName: string;
-  subCategories: SubCategory[];  
+  subCategories: SubCategory[];
 }
 
 const CategoryTable: React.FC = () => {
@@ -18,7 +18,10 @@ const CategoryTable: React.FC = () => {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isUpdateModalOpen, setIsUpdateModalOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
-  const [formData, setFormData] = useState({ categoryName: "", subCategoryName: "" });
+  const [formData, setFormData] = useState({
+    categoryName: "",
+    subCategories: [{ subCategoryName: "" }],
+  });
 
   const fetchCategories = async () => {
     try {
@@ -42,12 +45,12 @@ const CategoryTable: React.FC = () => {
     }
   };
 
-  
-  
-
   const handleCreate = async () => {
     try {
-      await axios.post("http://localhost:8000/category", formData);
+      await axios.post("http://localhost:8000/category", {
+        categoryName: formData.categoryName,
+        subCategories: formData.subCategories,
+      });
       alert("Category created successfully!");
       setIsCreateModalOpen(false);
       fetchCategories();
@@ -58,62 +61,12 @@ const CategoryTable: React.FC = () => {
 
   const handleUpdate = async () => {
     if (!selectedCategory) return;
-  
+
     try {
-      const promises = [];
-  
-      
-      if (formData.categoryName !== selectedCategory.categoryName) {
-        promises.push(
-          axios.put(`http://localhost:8000/category/${selectedCategory.id}`, {
-            categoryName: formData.categoryName,
-          })
-        );
-      }
-  
-      
-      const originalSubCategoryNames = selectedCategory.subCategories
-        .map((sub) => sub.subCategoryName)
-        .join(", ");
-      if (formData.subCategoryName !== originalSubCategoryNames) {
-        const updatedSubCategories = formData.subCategoryName
-          .split(",")
-          .map((name) => name.trim());
-  
-        
-        updatedSubCategories.forEach((subCategoryName, index) => {
-          const existingSubCategory = selectedCategory.subCategories[index];
-  
-          if (existingSubCategory) {
-            
-            promises.push(
-              axios.put(`http://localhost:8000/subCategory/${existingSubCategory.id}`, {
-                subCategoryName,
-              })
-            );
-          } else {
-            
-            promises.push(
-              axios.post(`http://localhost:8000/subCategory`, {
-                categoryId: selectedCategory.id,
-                subCategoryName,
-              })
-            );
-          }
-        });
-  
-        
-        if (selectedCategory.subCategories.length > updatedSubCategories.length) {
-          const removedSubCategories = selectedCategory.subCategories.slice(updatedSubCategories.length);
-          removedSubCategories.forEach((sub) =>
-            promises.push(axios.delete(`http://localhost:8000/subCategory/${sub.id}`))
-          );
-        }
-      }
-  
-      
-      await Promise.all(promises);
-  
+      await axios.put(`http://localhost:8000/category/${selectedCategory.id}`, {
+        categoryName: formData.categoryName,
+        subCategories: formData.subCategories,
+      });
       alert("Category and subcategories updated successfully!");
       setIsUpdateModalOpen(false);
       fetchCategories();
@@ -122,8 +75,25 @@ const CategoryTable: React.FC = () => {
       alert("Failed to update category or subcategories.");
     }
   };
-  
-  
+
+  const addSubCategoryField = () => {
+    setFormData({
+      ...formData,
+      subCategories: [...formData.subCategories, { subCategoryName: "" }],
+    });
+  };
+
+  const removeSubCategoryField = (index: number) => {
+    const updatedSubCategories = formData.subCategories.filter((_, i) => i !== index);
+    setFormData({ ...formData, subCategories: updatedSubCategories });
+  };
+
+  const handleSubCategoryChange = (index: number, value: string) => {
+    const updatedSubCategories = formData.subCategories.map((sub, i) =>
+      i === index ? { ...sub, subCategoryName: value } : sub
+    );
+    setFormData({ ...formData, subCategories: updatedSubCategories });
+  };
 
   useEffect(() => {
     fetchCategories();
@@ -136,7 +106,7 @@ const CategoryTable: React.FC = () => {
           <button
             onClick={() => {
               setIsCreateModalOpen(true);
-              setFormData({ categoryName: "", subCategoryName: "" });
+              setFormData({ categoryName: "", subCategories: [{ subCategoryName: "" }] });
             }}
             className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
           >
@@ -145,8 +115,8 @@ const CategoryTable: React.FC = () => {
         </div>
 
         <div className="bg-white shadow-md rounded-lg overflow-hidden">
-          <table className="w-full text-center table-auto border-collapse border border-gray-200">
-            <thead>
+        <table className="w-screen text-center border-collapse border border-gray-200" style={{width:"1200px"}}>
+        <thead>
               <tr className="bg-gray-200">
                 <th className="border border-gray-300 p-3">Id</th>
                 <th className="border border-gray-300 p-3">Category Name</th>
@@ -161,7 +131,6 @@ const CategoryTable: React.FC = () => {
                     <td className="border border-gray-300 p-3">{category.id}</td>
                     <td className="border border-gray-300 p-3">{category.categoryName}</td>
                     <td className="border border-gray-300 p-3">
-                      {/* Displaying all subcategories for each category */}
                       {category.subCategories.map((subCategory) => (
                         <div key={subCategory.id}>{subCategory.subCategoryName}</div>
                       ))}
@@ -172,9 +141,9 @@ const CategoryTable: React.FC = () => {
                           setSelectedCategory(category);
                           setFormData({
                             categoryName: category.categoryName,
-                            subCategoryName: category.subCategories
-                              .map((sub) => sub.subCategoryName)
-                              .join(", "), 
+                            subCategories: category.subCategories.map((sub) => ({
+                              subCategoryName: sub.subCategoryName,
+                            })),
                           });
                           setIsUpdateModalOpen(true);
                         }}
@@ -215,25 +184,43 @@ const CategoryTable: React.FC = () => {
               placeholder="Category Name"
               className="border p-2 rounded mb-2 w-full"
             />
-            <input
-              type="text"
-              value={formData.subCategoryName}
-              onChange={(e) => setFormData({ ...formData, subCategoryName: e.target.value })}
-              placeholder="Sub Category"
-              className="border p-2 rounded mb-4 w-full"
-            />
+            {formData.subCategories.map((sub, index) => (
+              <div key={index} className="flex items-center mb-2">
+                <input
+                  type="text"
+                  value={sub.subCategoryName}
+                  onChange={(e) => handleSubCategoryChange(index, e.target.value)}
+                  placeholder={`Sub Category ${index + 1}`}
+                  className="border p-2 rounded w-full"
+                />
+                <button
+                  onClick={() => removeSubCategoryField(index)}
+                  className="ml-2 text-red-500 hover:text-red-700"
+                >
+                  &times;
+                </button>
+              </div>
+            ))}
             <button
-              onClick={handleCreate}
-              className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 mr-2"
+              onClick={addSubCategoryField}
+              className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
             >
-              Create
+              + Add Subcategory
             </button>
-            <button
-              onClick={() => setIsCreateModalOpen(false)}
-              className="bg-gray-300 px-4 py-2 rounded hover:bg-gray-400"
-            >
-              Cancel
-            </button>
+            <div className="mt-4">
+              <button
+                onClick={handleCreate}
+                className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 mr-2"
+              >
+                Create
+              </button>
+              <button
+                onClick={() => setIsCreateModalOpen(false)}
+                className="bg-gray-300 px-4 py-2 rounded hover:bg-gray-400"
+              >
+                Cancel
+              </button>
+            </div>
           </div>
         </div>
       )}
@@ -250,25 +237,43 @@ const CategoryTable: React.FC = () => {
               placeholder="Category Name"
               className="border p-2 rounded mb-2 w-full"
             />
-            <input
-              type="text"
-              value={formData.subCategoryName}
-              onChange={(e) => setFormData({ ...formData, subCategoryName: e.target.value })}
-              placeholder="Sub Category"
-              className="border p-2 rounded mb-4 w-full"
-            />
+            {formData.subCategories.map((sub, index) => (
+              <div key={index} className="flex items-center mb-2">
+                <input
+                  type="text"
+                  value={sub.subCategoryName}
+                  onChange={(e) => handleSubCategoryChange(index, e.target.value)}
+                  placeholder={`Sub Category ${index + 1}`}
+                  className="border p-2 rounded w-full"
+                />
+                <button
+                  onClick={() => removeSubCategoryField(index)}
+                  className="ml-2 text-red-500 hover:text-red-700"
+                >
+                  &times;
+                </button>
+              </div>
+            ))}
             <button
-              onClick={handleUpdate}
-              className="bg-yellow-500 text-white px-4 py-2 rounded hover:bg-yellow-600 mr-2"
+              onClick={addSubCategoryField}
+              className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
             >
-              Update
+              + Add Subcategory
             </button>
-            <button
-              onClick={() => setIsUpdateModalOpen(false)}
-              className="bg-gray-300 px-4 py-2 rounded hover:bg-gray-400"
-            >
-              Cancel
-            </button>
+            <div className="mt-4">
+              <button
+                onClick={handleUpdate}
+                className="bg-yellow-500 text-white px-4 py-2 rounded hover:bg-yellow-600 mr-2"
+              >
+                Update
+              </button>
+              <button
+                onClick={() => setIsUpdateModalOpen(false)}
+                className="bg-gray-300 px-4 py-2 rounded hover:bg-gray-400"
+              >
+                Cancel
+              </button>
+            </div>
           </div>
         </div>
       )}

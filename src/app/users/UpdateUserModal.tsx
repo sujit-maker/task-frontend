@@ -4,7 +4,7 @@ import axios from 'axios';
 interface UpdateUserModalProps {
   show: boolean;
   onHide: () => void;
-  userId: string; // ID of the user to be updated
+  userId: string; 
   fetchUsers: () => void;
 }
 
@@ -151,18 +151,6 @@ const UpdateUserModal: React.FC<UpdateUserModalProps> = ({ show, onHide, userId,
                 placeholder="Enter email ID"
                 value={emailId}
                 onChange={(e) => setEmailId(e.target.value)}
-                required
-              />
-            </div>
-
-            <div className="flex flex-col">
-              <label className="text-sm font-medium text-gray-700">Department</label>
-              <input
-                type="text"
-                className="p-3 border border-gray-300 rounded-md mt-1"
-                placeholder="Enter department"
-                value={departmentId}
-                onChange={(e) => setdepartmentId(e.target.value)}
                 required
               />
             </div>

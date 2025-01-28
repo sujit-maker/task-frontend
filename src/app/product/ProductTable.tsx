@@ -101,8 +101,8 @@ const ProductTable: React.FC = () => {
         </div>
 
         <div className="bg-white shadow-md rounded-lg overflow-hidden">
-          <table className="w-full text-center table-auto border-collapse border border-gray-200">
-            <thead>
+        <table className="w-screen text-center border-collapse border border-gray-200" style={{width:"1200px"}}>
+        <thead>
               <tr className="bg-gray-200">
                 <th className="border border-gray-300 p-3">ProductId</th>
                 <th className="border border-gray-300 p-3">ProductName</th>

@@ -1,8 +1,7 @@
 "use client";
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-
-// Define interfaces
+import { useAuth } from "../hooks/useAuth";
 
 interface Department {
   id: number;
@@ -26,7 +25,7 @@ interface Site {
 }
 
 interface Task {
-  id: number;
+  id?: number;
   departmentId: number;
   serviceId: number;
   customerId: number;
@@ -39,61 +38,76 @@ interface Task {
   hodId: number;
   managerId: number;
   executiveId: number;
-  Site: Site;
-  Service: Service;
+  site: Site;
+  service: Service;
 }
 
 const TaskTable: React.FC = () => {
+  const { userId } = useAuth();
   const [tasks, setTasks] = useState<Task[]>([]);
   const [departments, setDepartments] = useState<Department[]>([]);
-  const [services, setServices] = useState<Service[]>([]);
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [sites, setSites] = useState<any[]>([]);
   const [executives, setExecutives] = useState<Customer[]>([]);
   const [managers, setManagers] = useState<Customer[]>([]);
   const [hods, setHods] = useState<Customer[]>([]);
-
+  const [formHods, setFormHods] = useState<Customer[]>([]);
+  const [formManagers, setFormManagers] = useState<Customer[]>([]);
+  const [formExecutive, setFormExecutive] = useState<Customer[]>([]);
+  const [formServices, setFormServices] = useState<Service[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState<Task>({
-    id: 0,
     departmentId: 0,
     serviceId: 0,
     customerId: 0,
     siteId: 0,
     workScope: "",
-    proposedDate: "",
-    priority: "",
+    proposedDate:"",
+    priority: "Low",
     remark: "",
-    status: "",
+    status: "Open",
     hodId: 0,
     managerId: 0,
     executiveId: 0,
-    Site: { id: 0, siteName: "" },
-    Service: { id: 0, serviceName: "" },
+    site: { id: 0, siteName: "" },
+    service: { id: 0, serviceName: "" },
   });
 
-  // Fetch tasks
   const fetchTasks = async () => {
+    const userId = localStorage.getItem("userId");
+    const userType = localStorage.getItem("userType");
+
     try {
-      const response = await axios.get("http://localhost:8000/tasks");
-      setTasks(response.data);
+      let response;
+      if (userType === "SUPERADMIN") {
+        response = await axios.get("http://localhost:8000/tasks");
+      } else {
+        response = await axios.get(
+          `http://localhost:8000/tasks/user/${userId}`
+        );
+      }
+
+      // Ensure tasks have Service field populated
+      if (response.data && Array.isArray(response.data)) {
+        setTasks(response.data);
+      } else {
+        setTasks([]);
+      }
     } catch (error) {
-      console.error("Error fetching tasks:", error);
+      setTasks([]);
     }
   };
 
-  // Fetch departments
   const fetchDepartments = async () => {
     try {
       const response = await axios.get("http://localhost:8000/departments");
       setDepartments(response.data);
     } catch (error) {
-      console.error("Error fetching departments:", error);
+      console.log("Error fetching departments:", error);
     }
   };
 
-  // Fetch executives
   const fetchExecutives = async () => {
     try {
       const response = await axios.get(
@@ -101,54 +115,76 @@ const TaskTable: React.FC = () => {
       );
       setExecutives(response.data);
     } catch (error) {
-      console.error("Error fetching executives:", error);
+      console.log("Error fetching executives:", error);
     }
   };
 
-  // Fetch managers
   const fetchManagers = async () => {
     try {
       const response = await axios.get("http://localhost:8000/users/managers");
       setManagers(response.data);
     } catch (error) {
-      console.error("Error fetching managers:", error);
+      console.log("Error fetching managers:", error);
     }
   };
 
-  // Fetch HODs
-  const fetchHods = async () => {
+  const fetchHodsByDepartment = async (departmentName: string) => {
     try {
-      const response = await axios.get("http://localhost:8000/users/hods");
-      setHods(response.data);
+      const response = await axios.get(
+        `http://localhost:8000/users/hods/${departmentName}`
+      );
+      setFormHods(response.data);
     } catch (error) {
-      console.error("Error fetching HODs:", error);
+      console.log("Error fetching HODs:", error);
+      setFormHods([]);
     }
   };
 
-  // Fetch services based on selected department
+  const fetchManagersByDepartment = async (departmentName: string) => {
+    try {
+      const response = await axios.get(
+        `http://localhost:8000/users/manager/${departmentName}`
+      );
+      setFormManagers(response.data);
+    } catch (error) {
+      console.log("Error fetching Managers:", error);
+      setFormManagers([]);
+    }
+  };
+
+  const fetchExecutivesByDepartment = async (departmentName: string) => {
+    try {
+      const response = await axios.get(
+        `http://localhost:8000/users/executive/${departmentName}`
+      );
+      setFormExecutive(response.data);
+    } catch (error) {
+      console.log("Error fetching Executives:", error);
+      setFormExecutive([]);
+    }
+  };
+
   const fetchServicesByDepartment = async (departmentId: number) => {
     try {
       const response = await axios.get(
         `http://localhost:8000/tasks/services/${departmentId}`
       );
-      setServices(response.data);
+      setFormServices(response.data);
     } catch (error) {
-      console.error("Error fetching services:", error);
-      setServices([]);
+      console.log("Error fetching services:", error);
+      setFormServices([]);
     }
   };
 
-  // Fetch customers
   const fetchCustomers = async () => {
     try {
       const response = await axios.get("http://localhost:8000/customers");
       setCustomers(response.data);
     } catch (error) {
-      console.error("Error fetching customers:", error);
+      console.log("Error fetching customers:", error);
     }
   };
 
-  // Fetch sites based on selected customer
   const fetchSitesByCustomer = async (customerId: number) => {
     try {
       const response = await axios.get(
@@ -156,84 +192,115 @@ const TaskTable: React.FC = () => {
       );
       setSites(response.data);
     } catch (error) {
-      console.error("Error fetching sites:", error);
+      console.log("Error fetching sites:", error);
       setSites([]);
     }
   };
 
-  // Handle task deletion
   const handleDelete = async (id: number) => {
     try {
       await axios.delete(`http://localhost:8000/tasks/${id}`);
       alert("Task deleted successfully!");
       fetchTasks();
     } catch (error) {
-      console.error("Error deleting task:", error);
+      console.log("Error deleting task:", error);
     }
   };
 
-  // Handle task save (add or update)
+  const fetchAllHods = async () => {
+    try {
+      const response = await axios.get("http://localhost:8000/users/hods");
+      setHods(response.data);
+    } catch (error) {
+      console.log("Error fetching all HODs:", error);
+    }
+  };
+
   const handleSave = async () => {
     try {
+      // Validate required fields
+      if (!formData.departmentId || !formData.serviceId) {
+        alert("Please select a valid department and service.");
+        return;
+      }
+  
+      // Prepare data for the API
+      const sanitizedData = {
+        ...formData,
+        proposedDate: new Date(formData.proposedDate).toISOString(), // Ensure ISO format
+        site: undefined, // Remove nested objects
+        service: undefined,
+        managerId: formData.managerId || null, // Convert 0 to null for optional fields
+        executiveId: formData.executiveId || null,
+      };
+  
       if (isEditing) {
-        await axios.put(`http://localhost:8000/tasks/${formData.id}`, formData);
+        await axios.put(`http://localhost:8000/tasks/${formData.id}`, sanitizedData);
         alert("Task updated successfully!");
       } else {
-        await axios.post("http://localhost:8000/tasks", formData);
+        await axios.post("http://localhost:8000/tasks", sanitizedData);
         alert("Task created successfully!");
       }
+  
       setIsModalOpen(false);
-      fetchTasks();
+      fetchTasks(); // Refresh the task list
     } catch (error) {
       console.error("Error saving task:", error);
+      alert("An error occurred while saving the task.");
     }
   };
+  
 
-  // Open modal for adding or editing a task
   const openModal = (task: Task | null = null) => {
     setIsEditing(!!task);
     setFormData(
       task || {
-        id: 0,
+
         departmentId: 0,
         serviceId: 0,
         customerId: 0,
         siteId: 0,
         workScope: "",
         proposedDate: "",
-        priority: "",
+        priority: "Low",
         remark: "",
-        status: "",
+        status: "Open",
         hodId: 0,
         managerId: 0,
         executiveId: 0,
-        Site: { id: 0, siteName: "" },
-        Service: { id: 0, serviceName: "" },
+        site: { id: 0, siteName: "" },
+        service: { id: 0, serviceName: "" },
       }
     );
     setIsModalOpen(true);
   };
 
-  // Handle department change
-  const handleDepartmentChange = (departmentId: number) => {
-    setFormData({ ...formData, departmentId, serviceId: 0 });
+  const handleDepartmentChange = (
+    departmentId: number,
+    departmentName: string
+  ) => {
+    setFormData({ ...formData, departmentId, serviceId: 0, hodId: 0 , managerId:0, executiveId:0 });
     fetchServicesByDepartment(departmentId);
+    fetchHodsByDepartment(departmentName);
+    fetchManagersByDepartment(departmentName);
+    fetchExecutivesByDepartment(departmentName);
   };
 
-  // Handle customer change
   const handleCustomerChange = (customerId: number) => {
-    setFormData({ ...formData, customerId, siteId: 0 }); // Reset siteId
+    setFormData({ ...formData, customerId, siteId: 0 });
     fetchSitesByCustomer(customerId);
   };
 
   useEffect(() => {
-    fetchTasks();
-    fetchDepartments();
-    fetchCustomers();
-    fetchExecutives();
-    fetchManagers();
-    fetchHods();
-  }, []);
+    if (userId) {
+      fetchTasks();
+      fetchDepartments();
+      fetchCustomers();
+      fetchExecutives();
+      fetchManagers();
+      fetchAllHods();
+    }
+  }, [userId]);
 
   return (
     <div className="flex h-screen w-full p-6">
@@ -248,10 +315,12 @@ const TaskTable: React.FC = () => {
         </div>
 
         <div className="bg-white shadow-md rounded-lg overflow-hidden">
-          <table className="w-full text-center table-auto border-collapse border border-gray-200">
+          <table
+            className="w-screen text-center border-collapse border border-gray-200"
+            style={{ width: "1200px" }}
+          >
             <thead>
               <tr className="bg-gray-200">
-                <th className="border border-gray-300 p-3">ID</th>
                 <th className="border border-gray-300 p-3">Department</th>
                 <th className="border border-gray-300 p-3">Service</th>
                 <th className="border border-gray-300 p-3">Customer</th>
@@ -266,7 +335,6 @@ const TaskTable: React.FC = () => {
               {tasks.length > 0 ? (
                 tasks.map((task) => (
                   <tr key={task.id} className="hover:bg-gray-100">
-                    <td className="border border-gray-300 p-3">{task.id}</td>
                     <td className="border border-gray-300 p-3">
                       {
                         departments.find(
@@ -275,8 +343,9 @@ const TaskTable: React.FC = () => {
                       }
                     </td>
                     <td className="border border-gray-300 p-3">
-                      {task.Service.serviceName}
+                      {task.service?.serviceName || "No Service"}
                     </td>
+
                     <td className="border border-gray-300 p-3">
                       {
                         customers.find(
@@ -285,8 +354,9 @@ const TaskTable: React.FC = () => {
                       }
                     </td>
                     <td className="border border-gray-300 p-3">
-                      {task.Site.siteName}
+                      {task.site?.siteName || "No Service"}
                     </td>
+
                     <td className="border border-gray-300 p-3">
                       {hods.find((hod) => hod.id === task.hodId)?.username ||
                         "N/A"}
@@ -300,7 +370,7 @@ const TaskTable: React.FC = () => {
                         (executive) => executive.id === task.executiveId
                       )?.username || "N/A"}
                     </td>
-
+        
                     <td className="border border-gray-300 p-3">
                       <button
                         onClick={() => openModal(task)}
@@ -309,7 +379,7 @@ const TaskTable: React.FC = () => {
                         Edit
                       </button>
                       <button
-                        onClick={() => handleDelete(task.id)}
+                        onClick={() => handleDelete(task.id!)}
                         className="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600"
                       >
                         Delete
@@ -338,9 +408,13 @@ const TaskTable: React.FC = () => {
 
             <select
               value={formData.departmentId}
-              onChange={(e) =>
-                handleDepartmentChange(parseInt(e.target.value, 10))
-              }
+              onChange={(e) => {
+                const departmentId = parseInt(e.target.value, 10);
+                const departmentName =
+                  departments.find((dept) => dept.id === departmentId)
+                    ?.departmentName || "";
+                handleDepartmentChange(departmentId, departmentName);
+              }}
               className="border p-2 rounded mb-4 w-full"
             >
               <option value={0}>Select Department</option>
@@ -362,7 +436,7 @@ const TaskTable: React.FC = () => {
               className="border p-2 rounded mb-4 w-full"
             >
               <option value={0}>Select Service</option>
-              {services.map((service) => (
+              {formServices.map((service) => (
                 <option key={service.id} value={service.id}>
                   {service.serviceName}
                 </option>
@@ -411,14 +485,18 @@ const TaskTable: React.FC = () => {
               placeholder="Work Scope"
               className="border p-2 rounded mb-4 w-full"
             />
+
+            <label htmlFor="">Proposed Date</label>
             <input
               type="date"
               value={formData.proposedDate}
               onChange={(e) =>
                 setFormData({ ...formData, proposedDate: e.target.value })
               }
+              placeholder="Proposed Date"
               className="border p-2 rounded mb-4 w-full"
             />
+
             <select
               value={formData.hodId}
               onChange={(e) =>
@@ -427,17 +505,15 @@ const TaskTable: React.FC = () => {
                   hodId: parseInt(e.target.value, 10),
                 })
               }
-              className="border p-2 rounded mb-4 w-full max-h-40 overflow-y-auto"
+              className="border p-2 rounded mb-4 w-full"
             >
               <option value={0}>Select HOD</option>
-              {hods.map((hod) => (
+              {formHods.map((hod) => (
                 <option key={hod.id} value={hod.id}>
-                  {hod.username}{" "}
-                  {/* Display username instead of customerName */}
+                  {hod.username}
                 </option>
               ))}
             </select>
-
             <select
               value={formData.managerId}
               onChange={(e) =>
@@ -449,10 +525,9 @@ const TaskTable: React.FC = () => {
               className="border p-2 rounded mb-4 w-full max-h-40 overflow-y-auto"
             >
               <option value={0}>Select Manager</option>
-              {managers.map((manager) => (
+              {formManagers.map((manager) => (
                 <option key={manager.id} value={manager.id}>
-                  {manager.username}{" "}
-                  {/* Display username instead of customerName */}
+                  {manager.username}
                 </option>
               ))}
             </select>
@@ -467,11 +542,10 @@ const TaskTable: React.FC = () => {
               }
               className="border p-2 rounded mb-4 w-full max-h-40 overflow-y-auto"
             >
-              <option value={0}>Select Executive</option>
-              {executives.map((executive) => (
+<option value={0}>Select Executive</option>
+              {formExecutive.map((executive) => (
                 <option key={executive.id} value={executive.id}>
-                  {executive.username}{" "}
-                  {/* Display username instead of customerName */}
+                  {executive.username}
                 </option>
               ))}
             </select>
@@ -483,6 +557,7 @@ const TaskTable: React.FC = () => {
               }
               className="border p-2 rounded mb-4 w-full"
             >
+              <option value="">Select Priority</option>
               <option value="High">High</option>
               <option value="Mid">Mid</option>
               <option value="Low">Low</option>
@@ -501,6 +576,7 @@ const TaskTable: React.FC = () => {
                 setFormData({ ...formData, status: e.target.value })
               }
               className="border p-2 rounded mb-4 w-full"
+              disabled
             >
               <option value="Open">Open</option>
             </select>
