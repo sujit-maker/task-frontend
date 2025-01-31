@@ -13,6 +13,14 @@
 .sidebar-item {
   margin-bottom: 10px;
 }
+/* Custom styles for hover and active states */
+.dropdown-menu {
+  margin-top: 0.25rem;
+}
+.dropdown-item:hover {
+  background-color: #2d3748;
+  color: white;
+}
 
 .sidebar-button {
   display: flex;

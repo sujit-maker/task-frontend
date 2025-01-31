@@ -9,7 +9,6 @@ export default function Services() {
       <SidebarProvider>
         <AppSidebar />
         <main>
-          <SidebarTrigger />
           <ServiceTable/>
         </main>
       </SidebarProvider>

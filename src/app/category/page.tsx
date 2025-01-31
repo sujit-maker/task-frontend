@@ -9,7 +9,6 @@ export default function Customers() {
       <SidebarProvider>
         <AppSidebar />
         <main>
-          <SidebarTrigger />
           <CategoryTable/>
         </main>
       </SidebarProvider>

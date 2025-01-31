@@ -2,6 +2,7 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { useAuth } from "../hooks/useAuth";
+import { FaEdit, FaTrashAlt } from "react-icons/fa";
 
 interface Department {
   id: number;
@@ -63,7 +64,7 @@ const TaskTable: React.FC = () => {
     customerId: 0,
     siteId: 0,
     workScope: "",
-    proposedDate:"",
+    proposedDate: "",
     priority: "Low",
     remark: "",
     status: "Open",
@@ -88,7 +89,6 @@ const TaskTable: React.FC = () => {
         );
       }
 
-      // Ensure tasks have Service field populated
       if (response.data && Array.isArray(response.data)) {
         setTasks(response.data);
       } else {
@@ -218,44 +218,43 @@ const TaskTable: React.FC = () => {
 
   const handleSave = async () => {
     try {
-      // Validate required fields
       if (!formData.departmentId || !formData.serviceId) {
         alert("Please select a valid department and service.");
         return;
       }
-  
-      // Prepare data for the API
+
       const sanitizedData = {
         ...formData,
-        proposedDate: new Date(formData.proposedDate).toISOString(), // Ensure ISO format
-        site: undefined, // Remove nested objects
+        proposedDate: new Date(formData.proposedDate).toISOString(),
+        site: undefined,
         service: undefined,
-        managerId: formData.managerId || null, // Convert 0 to null for optional fields
+        managerId: formData.managerId || null,
         executiveId: formData.executiveId || null,
       };
-  
+
       if (isEditing) {
-        await axios.put(`http://localhost:8000/tasks/${formData.id}`, sanitizedData);
+        await axios.put(
+          `http://localhost:8000/tasks/${formData.id}`,
+          sanitizedData
+        );
         alert("Task updated successfully!");
       } else {
         await axios.post("http://localhost:8000/tasks", sanitizedData);
         alert("Task created successfully!");
       }
-  
+
       setIsModalOpen(false);
-      fetchTasks(); // Refresh the task list
+      fetchTasks();
     } catch (error) {
       console.error("Error saving task:", error);
       alert("An error occurred while saving the task.");
     }
   };
-  
 
   const openModal = (task: Task | null = null) => {
     setIsEditing(!!task);
     setFormData(
       task || {
-
         departmentId: 0,
         serviceId: 0,
         customerId: 0,
@@ -279,7 +278,14 @@ const TaskTable: React.FC = () => {
     departmentId: number,
     departmentName: string
   ) => {
-    setFormData({ ...formData, departmentId, serviceId: 0, hodId: 0 , managerId:0, executiveId:0 });
+    setFormData({
+      ...formData,
+      departmentId,
+      serviceId: 0,
+      hodId: 0,
+      managerId: 0,
+      executiveId: 0,
+    });
     fetchServicesByDepartment(departmentId);
     fetchHodsByDepartment(departmentName);
     fetchManagersByDepartment(departmentName);
@@ -303,9 +309,9 @@ const TaskTable: React.FC = () => {
   }, [userId]);
 
   return (
-    <div className="flex h-screen w-full p-6">
-      <div className="flex-1">
-        <div className="flex justify-between items-center mb-4">
+    <div className="flex h-screen mt-3">
+    <div className="flex-1 p-6 overflow-auto lg:ml-72 "> 
+      <div className="flex justify-between items-center mb-5 mt-16">
           <button
             onClick={() => openModal()}
             className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
@@ -314,11 +320,8 @@ const TaskTable: React.FC = () => {
           </button>
         </div>
 
-        <div className="bg-white shadow-md rounded-lg overflow-hidden">
-          <table
-            className="w-screen text-center border-collapse border border-gray-200"
-            style={{ width: "1200px" }}
-          >
+        <div className="overflow-x-auto" style={{ maxWidth: "100vw" }}>
+          <table className="min-w-[1100px] w-full text-center border-collapse border border-gray-200">
             <thead>
               <tr className="bg-gray-200">
                 <th className="border border-gray-300 p-3">Department</th>
@@ -361,28 +364,30 @@ const TaskTable: React.FC = () => {
                       {hods.find((hod) => hod.id === task.hodId)?.username ||
                         "N/A"}
                     </td>
+                    
                     <td className="border border-gray-300 p-3">
                       {managers.find((manager) => manager.id === task.managerId)
                         ?.username || "N/A"}
                     </td>
+
                     <td className="border border-gray-300 p-3">
                       {executives.find(
                         (executive) => executive.id === task.executiveId
                       )?.username || "N/A"}
                     </td>
-        
-                    <td className="border border-gray-300 p-3">
-                      <button
+
+                    <td className="border border-gray-300 px-4 py-2 ">
+                    <button
                         onClick={() => openModal(task)}
                         className="bg-yellow-500 text-white px-3 py-1 rounded hover:bg-yellow-600 mr-2"
                       >
-                        Edit
+                        <FaEdit className="inline-block" />
                       </button>
                       <button
                         onClick={() => handleDelete(task.id!)}
                         className="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600"
                       >
-                        Delete
+                        <FaTrashAlt className="inline-block" />
                       </button>
                     </td>
                   </tr>
@@ -542,7 +547,7 @@ const TaskTable: React.FC = () => {
               }
               className="border p-2 rounded mb-4 w-full max-h-40 overflow-y-auto"
             >
-<option value={0}>Select Executive</option>
+              <option value={0}>Select Executive</option>
               {formExecutive.map((executive) => (
                 <option key={executive.id} value={executive.id}>
                   {executive.username}

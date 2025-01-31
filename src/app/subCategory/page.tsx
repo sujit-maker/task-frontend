@@ -1,16 +1,15 @@
 import React from 'react';
 import { AppSidebar } from '../components/app-sidebar';
-import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
-import SiteTable from './SiteTable';
+import { SidebarProvider} from '@/components/ui/sidebar';
+import SubCategoryTable from './SubCategoryTable';
 
-export default function Users() {
+export default function Customers() {
   return (
     <>
       <SidebarProvider>
         <AppSidebar />
         <main>
-          <SiteTable/>
-          
+          <SubCategoryTable/>
         </main>
       </SidebarProvider>
     </>

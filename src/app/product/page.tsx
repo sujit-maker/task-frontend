@@ -9,7 +9,6 @@ export default function Products() {
       <SidebarProvider>
         <AppSidebar />
         <main>
-          <SidebarTrigger />
           <ProductTable/>
         </main>
       </SidebarProvider>

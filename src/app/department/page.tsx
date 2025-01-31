@@ -9,7 +9,6 @@ export default function ServiceType() {
       <SidebarProvider>
         <AppSidebar />
         <main>
-          <SidebarTrigger />
           <DepartmentTable/>
         </main>
       </SidebarProvider>

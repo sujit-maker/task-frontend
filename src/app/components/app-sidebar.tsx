@@ -1,136 +1,231 @@
 "use client";
 import React, { useState } from "react";
 import {
-  Sidebar,
-  SidebarContent,
-  SidebarGroup,
-  SidebarGroupContent,
-  SidebarGroupLabel,
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
-} from "@/components/ui/sidebar";
-import {
-  Home,
-  User,
-  Calendar,
-  Settings,
-  ChevronDown,
-  ChevronUp,
-  User2,
-} from "lucide-react";
-import { BiUserCircle, BiHomeAlt2, BiCategory } from "react-icons/bi";
-import "./app.css";
+  BiUserCircle,
+  BiHomeAlt2,
+  BiCategory,
+  BiStoreAlt,
+  BiTask,
+} from "react-icons/bi";
+import { ChevronDown, ChevronUp, Menu, X } from "lucide-react";
+import { FaServicestack } from "react-icons/fa";
+import { useAuth } from "../hooks/useAuth";
 
 export function AppSidebar() {
+  const { userType } = useAuth();
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [inventoryOpen, setInventoryOpen] = useState(false);
+  const [serviceOpen, setServiceOpen] = useState(false);
   const [addressBookOpen, setAddressBookOpen] = useState(false);
 
+  // Define menu items
   const menuItems = [
-    { title: "Dashboard", url: "/dashboard", icon: Home },
-    { title: "Department", url: "/department", icon: BiHomeAlt2 },
-    { title: "User Management", url: "/users", icon: User2 },
-    { title: "Service Management", url: "/service", icon: Settings },
-    { title: "Task Management", url: "/task", icon: Calendar },
+    { title: "Dashboard", url: "/dashboard", icon: BiHomeAlt2 },
+    { title: "Department", url: "/department", icon: BiStoreAlt },
+    ...(userType === "SUPERADMIN"
+      ? [{ title: "User Management", url: "/users", icon: BiUserCircle }]
+      : []),
   ];
 
+  const toggleSidebar = () => {
+    setIsSidebarOpen(!isSidebarOpen);
+  };
+
   return (
-    <Sidebar className="custom-sidebar">
-      <SidebarContent>
-        <SidebarGroup>
-          <SidebarGroupLabel className="sidebar-label" style={{ marginTop: "25px" }}>
-            Main Navigation
-          </SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {/* Static Menu Items */}
-              {menuItems.slice(0, 3).map((item) => (
-                <SidebarMenuItem key={item.title} className="sidebar-item">
-                  <SidebarMenuButton asChild className="sidebar-button">
-                    <a href={item.url} className="sidebar-link">
-                      <item.icon className="sidebar-icon" />
-                      <span className="sidebar-text">{item.title}</span>
-                    </a>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
+    <div className="flex h-screen">
+      {/* Sidebar */}
+      <div
+        className={`fixed top-0 left-0 z-40 h-full bg-gray-800 text-white transition-transform duration-300 ${
+          isSidebarOpen ? "w-64" : "w-16"
+        } ${isSidebarOpen ? "translate-x-0" : "-translate-x-full"} md:translate-x-0 md:block`}
+      >
+        {/* Sidebar Header */}
+        <div className="flex items-center justify-between px-4 py-4 bg-gray-900">
+          <button
+            onClick={toggleSidebar}
+            className="text-white md:hidden flex hover:text-gray-300"
+            aria-label={isSidebarOpen ? "Close Sidebar" : "Open Sidebar"}
+          >
+            {isSidebarOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+          </button>
+        </div>
 
-              {/* Inventory Dropdown */}
-              <SidebarMenuItem className="sidebar-item dropdown-item">
-                <SidebarMenuButton
-                  onClick={() => setInventoryOpen(!inventoryOpen)}
-                  className="sidebar-button"
-                >
-                  <BiCategory className="sidebar-icon" />
-                  <span className="sidebar-text">Inventory</span>
-                  <span className="dropdown-toggle-icon">
-                    {inventoryOpen ? <ChevronUp /> : <ChevronDown />}
-                  </span>
-                </SidebarMenuButton>
-                {inventoryOpen && (
-                  <ul className="dropdown-menu">
-                    <li className="dropdown-item">
-                      <a href="/category" className="dropdown-link">
-                        Product Category
-                      </a>
-                    </li>
-                    <li className="dropdown-item">
-                      <a href="/product" className="dropdown-link">
-                        Product SKU
-                      </a>
-                    </li>
-                  </ul>
-                )}
-              </SidebarMenuItem>
+        {/* Menu Items */}
+        <ul className="mt-10 space-y-2">
+          {menuItems.map((item, index) => (
+            <li key={index}>
+              <a
+                href={item.url}
+                className="flex items-center px-4 py-2 hover:bg-gray-700 rounded-lg"
+                aria-label={item.title}
+              >
+                <item.icon className="w-6 h-6 hover:text-gray-400" />
+                {isSidebarOpen && <span className="ml-4">{item.title}</span>}
+              </a>
+            </li>
+          ))}
 
-              {/* Address Book Dropdown */}
-              <SidebarMenuItem className="sidebar-item dropdown-item">
-                <SidebarMenuButton
-                  onClick={() => setAddressBookOpen(!addressBookOpen)}
-                  className="sidebar-button"
-                >
-                  <BiUserCircle className="sidebar-icon" />
-                  <span className="sidebar-text">Address Book</span>
-                  <span className="dropdown-toggle-icon">
-                    {addressBookOpen ? <ChevronUp /> : <ChevronDown />}
-                  </span>
-                </SidebarMenuButton>
-                {addressBookOpen && (
-                  <ul className="dropdown-menu">
-                    <li className="dropdown-item">
-                      <a href="/vendor" className="dropdown-link">
-                        Vendors
-                      </a>
-                    </li>
-                    <li className="dropdown-item">
-                      <a href="/customer" className="dropdown-link">
-                        Customers
-                      </a>
-                    </li>
-                    <li className="dropdown-item">
-                      <a href="/site" className="dropdown-link">
-                        Sites
-                      </a>
-                    </li>
-                  </ul>
-                )}
-              </SidebarMenuItem>
+          {/* Address Book Dropdown (Moved After User Management) */}
+          <li>
+            <button
+              onClick={() => setAddressBookOpen(!addressBookOpen)}
+              className="flex items-center justify-between w-full px-4 py-2 text-left hover:bg-gray-700 rounded-lg"
+              aria-expanded={addressBookOpen ? "true" : "false"}
+              aria-controls="address-book-dropdown"
+            >
+              <div className="flex items-center">
+                <BiUserCircle className="w-6 h-6 hover:text-gray-400" />
+                {isSidebarOpen && <span className="ml-4">Address Book</span>}
+              </div>
+              <span>
+                {addressBookOpen ? <ChevronUp /> : <ChevronDown />}
+              </span>
+            </button>
+            {addressBookOpen && (
+              <ul id="address-book-dropdown" className="pl-8 mt-1 space-y-1 text-gray-400">
+                <li>
+                  <a
+                    href="/vendor"
+                    className="block px-2 py-1 hover:bg-gray-700 hover:text-white rounded"
+                    aria-label="Vendors"
+                  >
+                    Vendors
+                  </a>
+                </li>
+                <li>
+                  <a
+                    href="/customer"
+                    className="block px-2 py-1 hover:bg-gray-700 hover:text-white rounded"
+                    aria-label="Customers"
+                  >
+                    Customers
+                  </a>
+                </li>
+                <li>
+                  <a
+                    href="/site"
+                    className="block px-2 py-1 hover:bg-gray-700 hover:text-white rounded"
+                    aria-label="Customer Sites"
+                  >
+                   Customer Sites
+                  </a>
+                </li>
+              </ul>
+            )}
+          </li>
 
-              {/* Task Management */}
-              {menuItems.slice(3).map((item) => (
-                <SidebarMenuItem key={item.title} className="sidebar-item">
-                  <SidebarMenuButton asChild className="sidebar-button">
-                    <a href={item.url} className="sidebar-link">
-                      <item.icon className="sidebar-icon" />
-                      <span className="sidebar-text">{item.title}</span>
-                    </a>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
-      </SidebarContent>
-    </Sidebar>
+          {/* Service Management Dropdown */}
+          <li>
+            <button
+              onClick={() => setServiceOpen(!serviceOpen)}
+              className="flex items-center justify-between w-full px-4 py-2 text-left hover:bg-gray-700 rounded-lg"
+              aria-expanded={serviceOpen ? "true" : "false"}
+              aria-controls="service-dropdown"
+            >
+              <div className="flex items-center">
+                <FaServicestack className="w-6 h-6 hover:text-gray-400" />
+                {isSidebarOpen && <span className="ml-4">Service Management</span>}
+              </div>
+              <span>
+                {serviceOpen ? <ChevronUp /> : <ChevronDown />}
+              </span>
+            </button>
+            {serviceOpen && (
+              <ul id="service-dropdown" className="pl-8 mt-1 space-y-1 text-gray-400">
+                
+                <li>
+                  <a
+                    href="/category"
+                    className="block px-2 py-1 hover:bg-gray-700 hover:text-white rounded"
+                    aria-label="Service Category"
+                  >
+                    Add Category
+                  </a>
+                </li>
+                <li>
+                  <a
+                    href="/subCategory"
+                    className="block px-2 py-1 hover:bg-gray-700 hover:text-white rounded"
+                    aria-label="Service SubCategory"
+                  >
+                    Add SubCategory
+                  </a>
+                </li>
+                <li>
+                  <a
+                    href="/service"
+                    className="block px-2 py-1 hover:bg-gray-700 hover:text-white rounded"
+                    aria-label="Service Management"
+                  >
+                    Service SKU
+                  </a>
+                </li>
+              </ul>
+            )}
+          </li>
+
+          {/* Inventory Dropdown */}
+          <li>
+            <button
+              onClick={() => setInventoryOpen(!inventoryOpen)}
+              className="flex items-center justify-between w-full px-4 py-2 text-left hover:bg-gray-700 rounded-lg"
+              aria-expanded={inventoryOpen ? "true" : "false"}
+              aria-controls="inventory-dropdown"
+            >
+              <div className="flex items-center">
+                <BiCategory className="w-6 h-6 hover:text-gray-400" />
+                {isSidebarOpen && <span className="ml-4">Inventory Management</span>}
+              </div>
+              <span>
+                {inventoryOpen ? <ChevronUp /> : <ChevronDown />}
+              </span>
+            </button>
+            {inventoryOpen && (
+              <ul id="inventory-dropdown" className="pl-8 mt-1 space-y-1 text-gray-400">
+                <li>
+                  <a
+                    href="/category"
+                    className="block px-2 py-1 hover:bg-gray-700 hover:text-white rounded"
+                    aria-label="Product Category"
+                  >
+                    Add Category
+                  </a>
+                </li>
+                <li>
+                  <a
+                    href="/subCategory"
+                    className="block px-2 py-1 hover:bg-gray-700 hover:text-white rounded"
+                    aria-label="Product SubCategory"
+                  >
+                    Add SubCategory
+                  </a>
+                </li>
+                <li>
+                  <a
+                    href="/product"
+                    className="block px-2 py-1 hover:bg-gray-700 hover:text-white rounded"
+                    aria-label="Product SKU"
+                  >
+                    Product SKU
+                  </a>
+                </li>
+              </ul>
+            )}
+          </li>
+
+          {/* Task Management */}
+          <li>
+            <a
+              href="/task"
+              className="flex items-center px-4 py-2 hover:bg-gray-700 rounded-lg"
+              aria-label="Task Management"
+            >
+              <BiTask className="w-6 h-6 hover:text-gray-400" />
+              {isSidebarOpen && <span className="ml-4">Task Management</span>}
+            </a>
+          </li>
+        </ul>
+      </div>
+    </div>
   );
 }

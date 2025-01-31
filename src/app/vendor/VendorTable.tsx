@@ -91,10 +91,9 @@ const VendorTable: React.FC = () => {
   }, []);
 
   return (
-    <div className="flex h-screen w-full bg-gray-50">
-      <div className="flex-1 p-6">
-        <div className="flex justify-between items-center mb-4">
-          <h1 className="text-2xl font-bold">Vendor Management</h1>
+    <div className="flex h-screen mt-3">
+      <div className="flex-1 p-6 overflow-auto lg:ml-72 "> 
+        <div className="flex justify-between items-center mb-5 mt-16">
           <button
             onClick={() => setIsCreateModalOpen(true)}
             className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
@@ -103,13 +102,11 @@ const VendorTable: React.FC = () => {
           </button>
         </div>
 
-        <div className="bg-white shadow-md rounded-lg overflow-hidden">
-        <table className="w-screen text-center border-collapse border border-gray-200" style={{width:"1200px"}}>
-        <thead>
+        <div className="overflow-x-auto" style={{ maxWidth: "100vw" }}>
+          <table className="min-w-[1100px] w-full text-center border-collapse border border-gray-200">
+            <thead>
               <tr className="bg-gray-200">
                 <th className="border border-gray-300 p-3">Vendor Name</th>
-                <th className="border border-gray-300 p-3">Address</th>
-                <th className="border border-gray-300 p-3">GST</th>
                 <th className="border border-gray-300 p-3">Contact Name</th>
                 <th className="border border-gray-300 p-3">Contact Number</th>
                 <th className="border border-gray-300 p-3">Email</th>
@@ -120,8 +117,6 @@ const VendorTable: React.FC = () => {
               {vendors.map((vendor) => (
                 <tr key={vendor.id} className="hover:bg-gray-100">
                   <td className="border border-gray-300 p-3">{vendor.vendorName}</td>
-                  <td className="border border-gray-300 p-3">{vendor.registerAddress}</td>
-                  <td className="border border-gray-300 p-3">{vendor.gstNo}</td>
                   <td className="border border-gray-300 p-3">{vendor.contactName}</td>
                   <td className="border border-gray-300 p-3">{vendor.contactNumber}</td>
                   <td className="border border-gray-300 p-3">{vendor.emailId}</td>

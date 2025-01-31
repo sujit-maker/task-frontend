@@ -100,9 +100,9 @@ const CategoryTable: React.FC = () => {
   }, []);
 
   return (
-    <div className="flex h-screen w-full">
-      <div className="flex-1 p-6">
-        <div className="flex justify-between items-center mb-4">
+    <div className="flex h-screen mt-3">
+    <div className="flex-1 p-6 overflow-auto lg:ml-72 "> 
+      <div className="flex justify-between items-center mb-5 mt-16">
           <button
             onClick={() => {
               setIsCreateModalOpen(true);
@@ -114,13 +114,12 @@ const CategoryTable: React.FC = () => {
           </button>
         </div>
 
-        <div className="bg-white shadow-md rounded-lg overflow-hidden">
-        <table className="w-screen text-center border-collapse border border-gray-200" style={{width:"1200px"}}>
-        <thead>
+        <div className="overflow-x-auto" style={{ maxWidth: "100vw" }}>
+          <table className="min-w-[1100px] w-full text-center border-collapse border border-gray-200">
+            <thead>
               <tr className="bg-gray-200">
                 <th className="border border-gray-300 p-3">Id</th>
                 <th className="border border-gray-300 p-3">Category Name</th>
-                <th className="border border-gray-300 p-3">Sub Categories</th>
                 <th className="border border-gray-300 p-3">Actions</th>
               </tr>
             </thead>
@@ -130,11 +129,6 @@ const CategoryTable: React.FC = () => {
                   <tr key={category.id} className="hover:bg-gray-100">
                     <td className="border border-gray-300 p-3">{category.id}</td>
                     <td className="border border-gray-300 p-3">{category.categoryName}</td>
-                    <td className="border border-gray-300 p-3">
-                      {category.subCategories.map((subCategory) => (
-                        <div key={subCategory.id}>{subCategory.subCategoryName}</div>
-                      ))}
-                    </td>
                     <td className="border border-gray-300 p-3">
                       <button
                         onClick={() => {
@@ -184,29 +178,7 @@ const CategoryTable: React.FC = () => {
               placeholder="Category Name"
               className="border p-2 rounded mb-2 w-full"
             />
-            {formData.subCategories.map((sub, index) => (
-              <div key={index} className="flex items-center mb-2">
-                <input
-                  type="text"
-                  value={sub.subCategoryName}
-                  onChange={(e) => handleSubCategoryChange(index, e.target.value)}
-                  placeholder={`Sub Category ${index + 1}`}
-                  className="border p-2 rounded w-full"
-                />
-                <button
-                  onClick={() => removeSubCategoryField(index)}
-                  className="ml-2 text-red-500 hover:text-red-700"
-                >
-                  &times;
-                </button>
-              </div>
-            ))}
-            <button
-              onClick={addSubCategoryField}
-              className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
-            >
-              + Add Subcategory
-            </button>
+            
             <div className="mt-4">
               <button
                 onClick={handleCreate}
@@ -237,29 +209,8 @@ const CategoryTable: React.FC = () => {
               placeholder="Category Name"
               className="border p-2 rounded mb-2 w-full"
             />
-            {formData.subCategories.map((sub, index) => (
-              <div key={index} className="flex items-center mb-2">
-                <input
-                  type="text"
-                  value={sub.subCategoryName}
-                  onChange={(e) => handleSubCategoryChange(index, e.target.value)}
-                  placeholder={`Sub Category ${index + 1}`}
-                  className="border p-2 rounded w-full"
-                />
-                <button
-                  onClick={() => removeSubCategoryField(index)}
-                  className="ml-2 text-red-500 hover:text-red-700"
-                >
-                  &times;
-                </button>
-              </div>
-            ))}
-            <button
-              onClick={addSubCategoryField}
-              className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
-            >
-              + Add Subcategory
-            </button>
+            
+           
             <div className="mt-4">
               <button
                 onClick={handleUpdate}

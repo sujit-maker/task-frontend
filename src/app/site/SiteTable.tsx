@@ -108,10 +108,9 @@ const SiteTable: React.FC = () => {
   }, []);
 
   return (
-    <div className="flex flex-col items-center h-screen p-6 bg-gray-100">
-      <div className="w-full max-w-6xl bg-white shadow-md rounded-lg p-4">
-        <div className="flex justify-between items-center mb-6">
-          <h1 className="text-2xl font-bold">Site Management</h1>
+    <div className="flex h-screen mt-3">
+      <div className="flex-1 p-6 overflow-auto lg:ml-72 "> 
+        <div className="flex justify-between items-center mb-5 mt-16">
           <button
             onClick={() => {
               setFormData({
@@ -130,9 +129,9 @@ const SiteTable: React.FC = () => {
             Add Site
           </button>
         </div>
-        <div className="overflow-x-auto">
-        <table className="w-screen text-center border-collapse border border-gray-200" style={{width:"1200px"}}>
-        <thead>
+        <div className="overflow-x-auto" style={{ maxWidth: "100vw" }}>
+          <table className="min-w-[1000px] w-full text-center border-collapse border border-gray-200">
+            <thead>
               <tr className="bg-gray-200">
                 <th className="border border-gray-300 px-4 py-2">Site ID</th>
                 <th className="border border-gray-300 px-4 py-2">Site Name</th>

@@ -1,8 +1,9 @@
 "use client";
-import React, { useEffect, useState } from 'react';
-import axios from 'axios';
-import CreateUserModal from './CreateUserModal';
-import UpdateUserModal from './UpdateUserModal';
+import React, { useEffect, useState } from "react";
+import axios from "axios";
+import CreateUserModal from "./CreateUserModal";
+import UpdateUserModal from "./UpdateUserModal";
+import { FaEdit, FaTrashAlt } from "react-icons/fa";
 
 interface User {
   id: string;
@@ -11,7 +12,7 @@ interface User {
   lastName: string;
   contactNumber: string;
   emailId: string;
-  departments: Department[];  // departments is now an array of Department objects
+  departments: Department[];
   userType: string;
 }
 
@@ -25,35 +26,39 @@ const UserTable: React.FC = () => {
   const [departments, setDepartments] = useState<Department[]>([]);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [showUpdateModal, setShowUpdateModal] = useState<boolean>(false);
-  const [selectedUserId, setSelectedUserId] = useState<string>('');
+  const [selectedUserId, setSelectedUserId] = useState<string>("");
+
+  // Pagination States
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 5; // Set the number of items to display per page
 
   const fetchUsers = async () => {
     try {
-      const response = await axios.get('http://localhost:8000/users');
-      console.log('Fetched users:', response.data);  // Log users data
+      const response = await axios.get("http://localhost:8000/users");
+      console.log("Fetched users:", response.data);
       setUsers(response.data);
     } catch (error) {
-      console.error('Error fetching users:', error);
+      console.error("Error fetching users:", error);
     }
   };
 
   const fetchDepartments = async () => {
     try {
-      const response = await axios.get('http://localhost:8000/departments');
-      console.log('Fetched departments:', response.data);
+      const response = await axios.get("http://localhost:8000/departments");
+      console.log("Fetched departments:", response.data);
       setDepartments(response.data);
     } catch (error) {
-      console.error('Error fetching departments:', error);
+      console.error("Error fetching departments:", error);
     }
   };
 
   const handleDelete = async (id: string) => {
     try {
       await axios.delete(`http://localhost:8000/users/${id}`);
-      alert('User deleted successfully!');
+      alert("User deleted successfully!");
       fetchUsers();
     } catch (error) {
-      console.error('Error deleting user:', error);
+      console.error("Error deleting user:", error);
     }
   };
 
@@ -63,11 +68,9 @@ const UserTable: React.FC = () => {
   };
 
   const getDepartmentName = (departments: Department[]) => {
-    if (departments.length > 0) {
-      return departments.map((dept) => dept.departmentName).join(', '); // Join multiple departments
-    } else {
-      return 'Unknown';
-    }
+    return departments.length > 0
+      ? departments.map((dept) => dept.departmentName).join(", ")
+      : "Unknown";
   };
 
   useEffect(() => {
@@ -75,10 +78,17 @@ const UserTable: React.FC = () => {
     fetchDepartments();
   }, []);
 
+  // Pagination logic
+  const indexOfLastUser = currentPage * itemsPerPage;
+  const indexOfFirstUser = indexOfLastUser - itemsPerPage;
+  const currentUsers = users.slice(indexOfFirstUser, indexOfLastUser);
+
+  const paginate = (pageNumber: number) => setCurrentPage(pageNumber);
+
   return (
-    <div className="flex h-screen w-full">
-      <div className="flex-1 p-6">
-        <div className="flex justify-between items-center mb-4">
+    <div className="flex h-screen mt-3">
+      <div className="flex-1 p-6 overflow-auto lg:ml-72">
+        <div className="flex justify-between items-center mb-5 mt-16">
           <button
             onClick={() => setIsCreateModalOpen(true)}
             className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
@@ -87,51 +97,81 @@ const UserTable: React.FC = () => {
           </button>
         </div>
 
+        {/* Responsive Scrollable Table */}
         <div className="bg-white shadow-md rounded-lg overflow-hidden">
-          <table className="w-screen text-center border-collapse border border-gray-200" style={{ width: '1200px' }}>
-            <thead>
-              <tr className="bg-gray-200">
-                <th className="border border-gray-300 p-3">Username</th>
-                <th className="border border-gray-300 p-3">Name</th>
-                <th className="border border-gray-300 p-3">Department</th>
-                <th className="border border-gray-300 p-3">User Type</th>
-                <th className="border border-gray-300 p-3">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {users
-                .filter((user) => user.username !== 'admin') // Skip the admin user
-                .map((user) => (
-                  <tr key={user.id} className="hover:bg-gray-100">
-                    <td className="border border-gray-300 p-3">{user.username}</td>
-                    <td className="border border-gray-300 p-3">
-                      {user.firstName} {user.lastName}
-                    </td>
+          <div className="overflow-x-auto" style={{ maxWidth: "100vw" }}>
+            <table className="min-w-[1100px] w-full text-center border-collapse border border-gray-600">
+              <thead className="bg-gray-300">
+                <tr>
+                  <th className="border border-gray-300 p-3">Username</th>
+                  <th className="border border-gray-300 p-3">Department</th>
+                  <th className="border border-gray-300 p-3">User Type</th>
+                  <th className="border border-gray-300 p-3">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {currentUsers
+                  .filter((user) => user.username !== "admin")
+                  .map((user) => (
+                    <tr key={user.id} className="hover:bg-gray-100">
+                      <td className="border border-gray-300 p-3">{user.username}</td>
+                      <td className="border border-gray-300 p-3">
+                        {user.departments.length > 0
+                          ? getDepartmentName(user.departments)
+                          : "Loading..."}
+                      </td>
+                      <td className="border border-gray-300 p-3">{user.userType}</td>
+                      <td className="border border-gray-300 p-3">
+                        <div className="flex justify-center space-x-2">
+                          <button
+                            onClick={() => handleEdit(user.id)}
+                            className="bg-yellow-500 text-white px-3 py-1 rounded hover:bg-yellow-600"
+                          >
+                            <FaEdit className="inline-block" />
+                          </button>
+                          <button
+                            onClick={() => handleDelete(user.id)}
+                            className="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600"
+                          >
+                            <FaTrashAlt className="inline-block" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
 
-                    {/* Render department name */}
-                    <td className="border border-gray-300 p-3">
-                      {user.departments.length > 0 ? getDepartmentName(user.departments) : 'Loading...'}
-                    </td>
-
-                    <td className="border border-gray-300 p-3">{user.userType}</td>
-                    <td className="border border-gray-300 p-3">
-                      <button
-                        onClick={() => handleEdit(user.id)}
-                        className="bg-blue-500 text-white px-3 py-1 rounded hover:bg-yellow-600 mr-2"
-                      >
-                        Edit
-                      </button>
-                      <button
-                        onClick={() => handleDelete(user.id)}
-                        className="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600"
-                      >
-                        Delete
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-            </tbody>
-          </table>
+        {/* Pagination Controls */}
+        <div className="flex justify-center mt-4">
+          <button
+            onClick={() => paginate(currentPage - 1)}
+            className="bg-gray-300 text-gray-700 px-4 py-2 rounded hover:bg-gray-400 disabled:opacity-50"
+            disabled={currentPage === 1}
+          >
+            Previous
+          </button>
+          {/* Page Numbers */}
+          {[...Array(Math.ceil(users.length / itemsPerPage))].map((_, index) => (
+            <button
+              key={index}
+              onClick={() => paginate(index + 1)}
+              className={`mx-1 px-4 py-2 rounded ${
+                currentPage === index + 1 ? "bg-blue-500 text-white" : "bg-gray-300 text-gray-700"
+              } hover:bg-blue-400`}
+            >
+              {index + 1}
+            </button>
+          ))}
+          <button
+            onClick={() => paginate(currentPage + 1)}
+            className="bg-gray-300 text-gray-700 px-4 py-2 rounded hover:bg-gray-400 disabled:opacity-50"
+            disabled={currentPage === Math.ceil(users.length / itemsPerPage)}
+          >
+            Next
+          </button>
         </div>
       </div>
 

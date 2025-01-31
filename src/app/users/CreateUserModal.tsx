@@ -147,7 +147,7 @@ const CreateUserModal: React.FC<CreateUserModalProps> = ({
             <div className="flex flex-col">
               <label className="text-sm font-medium text-gray-700">Password</label>
               <input
-                type="password"
+                type="text"
                 className="p-3 border border-gray-300 rounded-md mt-1"
                 placeholder="Enter password"
                 value={password}

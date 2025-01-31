@@ -1,8 +1,8 @@
-"use client";
+"use client"
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 
-// Define the Department and Service types
+// Define the Department, Service, and other necessary types
 interface Department {
   id: number;
   departmentName: string;
@@ -14,22 +14,39 @@ interface Service {
   serviceDescription: string;
   SAC: string;
   departmentId: number;
+  categoryId: number;
+  subCategoryId: number;
+}
+
+interface Category {
+  id: number;
+  categoryName: string;
+  subCategories: { id: number; subCategoryName: string }[];
 }
 
 const ServiceTable: React.FC = () => {
   const [services, setServices] = useState<Service[]>([]);
-  const [departments, setDepartments] = useState<Department[]>([]); // Fetch departments
-  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-  const [isUpdateModalOpen, setIsUpdateModalOpen] = useState(false);
-  const [selectedService, setSelectedService] = useState<Service | null>(null);
+  const [departments, setDepartments] = useState<Department[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [subCategories, setSubCategories] = useState<{ id: number; subCategoryName: string }[]>([]);
+  const [categoryId, setCategoryId] = useState<string>("");
+  const [subCategoryId, setSubCategoryId] = useState<string>("");
   const [formData, setFormData] = useState({
     serviceName: "",
     serviceDescription: "",
     SAC: "",
-    departmentId: 0,  // Changed to departmentId
+    departmentId: 0,
   });
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [isUpdateModalOpen, setIsUpdateModalOpen] = useState(false);
+  const [selectedService, setSelectedService] = useState<Service | null>(null);
 
-  // Fetch the list of services
+  useEffect(() => {
+    fetchServices();
+    fetchDepartments();
+    fetchCategories();
+  }, []);
+
   const fetchServices = async () => {
     try {
       const response = await axios.get("http://localhost:8000/service");
@@ -39,7 +56,6 @@ const ServiceTable: React.FC = () => {
     }
   };
 
-  // Fetch the list of departments
   const fetchDepartments = async () => {
     try {
       const response = await axios.get("http://localhost:8000/departments");
@@ -49,19 +65,45 @@ const ServiceTable: React.FC = () => {
     }
   };
 
-  // Handle input changes in form
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+  const fetchCategories = async () => {
+    try {
+      const response = await axios.get("http://localhost:8000/category");
+      setCategories(response.data);
+    } catch (error) {
+      console.error("Error fetching categories:", error);
+    }
+  };
+
+  const fetchSubCategories = (categoryId: string) => {
+    const category = categories.find((cat) => cat.id.toString() === categoryId);
+    setSubCategories(category ? category.subCategories : []);
+  };
+
+  const handleCategoryChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const selectedCategoryId = e.target.value;
+    setCategoryId(selectedCategoryId);
+    fetchSubCategories(selectedCategoryId);
+    setSubCategoryId(""); // Reset subcategory selection when category changes
+  };
+
+  const handleSubCategoryChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setSubCategoryId(e.target.value);
+  };
+
+  const handleInputChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+  ) => {
     const { name, value } = e.target;
     setFormData((prevData) => ({
       ...prevData,
-      [name]: name === "departmentId" ? +value : value, // Ensure the departmentId is parsed as a number
+      [name]: name === "departmentId" ? +value : value, // Ensure departmentId is a number
     }));
   };
 
-  // Handle create new service
   const handleCreate = async () => {
     try {
-      await axios.post("http://localhost:8000/service", formData);
+      const newService = { ...formData, categoryId: +categoryId, subCategoryId: +subCategoryId };
+      await axios.post("http://localhost:8000/service", newService);
       alert("Service added successfully!");
       setIsCreateModalOpen(false);
       fetchServices();
@@ -70,11 +112,11 @@ const ServiceTable: React.FC = () => {
     }
   };
 
-  // Handle update an existing service
   const handleUpdate = async () => {
     if (selectedService) {
       try {
-        await axios.put(`http://localhost:8000/service/${selectedService.id}`, formData);
+        const updatedService = { ...formData, categoryId: +categoryId, subCategoryId: +subCategoryId };
+        await axios.put(`http://localhost:8000/service/${selectedService.id}`, updatedService);
         alert("Service updated successfully!");
         setIsUpdateModalOpen(false);
         fetchServices();
@@ -84,7 +126,6 @@ const ServiceTable: React.FC = () => {
     }
   };
 
-  // Handle delete a service
   const handleDelete = async (id: number) => {
     if (window.confirm("Are you sure you want to delete this service?")) {
       try {
@@ -97,17 +138,10 @@ const ServiceTable: React.FC = () => {
     }
   };
 
-  // Fetch data on component mount
-  useEffect(() => {
-    fetchServices();
-    fetchDepartments();
-  }, []);
-
   return (
-    <div className="flex flex-col items-center h-screen p-6 bg-gray-100">
-      <div className="w-full max-w-6xl bg-white shadow-md rounded-lg p-4">
-        <div className="flex justify-between items-center mb-6">
-          <h1 className="text-2xl font-bold">Service Management</h1>
+    <div className="flex h-screen mt-3">
+      <div className="flex-1 p-6 overflow-auto lg:ml-72">
+        <div className="flex justify-between items-center mb-5 mt-16">
           <button
             onClick={() => {
               setFormData({ serviceName: "", serviceDescription: "", SAC: "", departmentId: 0 });
@@ -118,9 +152,10 @@ const ServiceTable: React.FC = () => {
             Add Service
           </button>
         </div>
-        <div className="overflow-x-auto">
-        <table className="w-screen text-center border-collapse border border-gray-200" style={{width:"1200px"}}>
-        <thead>
+
+        <div className="overflow-x-auto" style={{ maxWidth: "100vw" }}>
+          <table className="min-w-[1100px] w-full text-center border-collapse border border-gray-200">
+            <thead>
               <tr className="bg-gray-200">
                 <th className="border border-gray-300 px-4 py-2">Service Name</th>
                 <th className="border border-gray-300 px-4 py-2">Description</th>
@@ -146,8 +181,10 @@ const ServiceTable: React.FC = () => {
                           serviceName: service.serviceName,
                           serviceDescription: service.serviceDescription,
                           SAC: service.SAC,
-                          departmentId: service.departmentId, // Use departmentId
+                          departmentId: service.departmentId,
                         });
+                        setCategoryId(service.categoryId.toString());
+                        setSubCategoryId(service.subCategoryId.toString());
                         setIsUpdateModalOpen(true);
                       }}
                       className="bg-yellow-500 text-white px-3 py-1 rounded hover:bg-yellow-600 mr-2"
@@ -172,19 +209,29 @@ const ServiceTable: React.FC = () => {
         <Modal
           title="Add Service"
           formData={formData}
-          departments={departments}  // Pass departments instead of serviceTypes
+          categories={categories}
+          subCategories={subCategories}
+          categoryId={categoryId}
+          subCategoryId={subCategoryId}
           onInputChange={handleInputChange}
+          onCategoryChange={handleCategoryChange}
+          onSubCategoryChange={handleSubCategoryChange}
           onSave={handleCreate}
           onClose={() => setIsCreateModalOpen(false)}
         />
       )}
 
-      {isUpdateModalOpen && (
+      {isUpdateModalOpen && selectedService && (
         <Modal
           title="Update Service"
           formData={formData}
-          departments={departments}  // Pass departments instead of serviceTypes
+          categories={categories}
+          subCategories={subCategories}
+          categoryId={categoryId}
+          subCategoryId={subCategoryId}
           onInputChange={handleInputChange}
+          onCategoryChange={handleCategoryChange}
+          onSubCategoryChange={handleSubCategoryChange}
           onSave={handleUpdate}
           onClose={() => setIsUpdateModalOpen(false)}
         />
@@ -193,31 +240,34 @@ const ServiceTable: React.FC = () => {
   );
 };
 
-// Modal for create/update service
 const Modal: React.FC<{
   title: string;
   formData: any;
-  departments: Department[];  // Change from serviceTypes to departments
+  categories: Category[];
+  subCategories: { id: number; subCategoryName: string }[];
+  categoryId: string;
+  subCategoryId: string;
   onInputChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => void;
+  onCategoryChange: (e: React.ChangeEvent<HTMLSelectElement>) => void;
+  onSubCategoryChange: (e: React.ChangeEvent<HTMLSelectElement>) => void;
   onSave: () => void;
   onClose: () => void;
-}> = ({ title, formData, departments, onInputChange, onSave, onClose }) => (
+}> = ({
+  title,
+  formData,
+  categories,
+  subCategories,
+  categoryId,
+  subCategoryId,
+  onInputChange,
+  onCategoryChange,
+  onSubCategoryChange,
+  onSave,
+  onClose,
+}) => (
   <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
     <div className="bg-white p-6 rounded-lg w-96">
       <h2 className="text-xl font-bold mb-4">{title}</h2>
-      <select
-        name="departmentId"
-        value={formData.departmentId}
-        onChange={onInputChange}
-        className="w-full mb-3 p-2 border rounded"
-      >
-        <option value={0}>Select Department</option>
-        {departments.map((dept) => (
-          <option key={dept.id} value={dept.id}>
-            {dept.departmentName}
-          </option>
-        ))}
-      </select>
       <input
         name="serviceName"
         value={formData.serviceName}
@@ -239,12 +289,56 @@ const Modal: React.FC<{
         placeholder="SAC"
         className="w-full mb-3 p-2 border rounded"
       />
-      
+      <select
+        name="departmentId"
+        value={formData.departmentId}
+        onChange={onInputChange}
+        className="w-full mb-3 p-2 border rounded"
+      >
+        <option value={0}>Select Department</option>
+        {categories.map((category) => (
+          <option key={category.id} value={category.id}>
+            {category.categoryName}
+          </option>
+        ))}
+      </select>
+
+      <select
+        value={categoryId}
+        onChange={onCategoryChange}
+        className="p-3 border border-gray-300 rounded-md mt-1"
+        required
+      >
+        <option value="">Select Category</option>
+        {categories.map((category) => (
+          <option key={category.id} value={category.id}>
+            {category.categoryName}
+          </option>
+        ))}
+      </select>
+
+      <select
+        value={subCategoryId}
+        onChange={onSubCategoryChange}
+        className="p-3 border border-gray-300 rounded-md mt-1"
+        required
+      >
+        <option value="">Select Subcategory</option>
+        {subCategories.map((subCategory) => (
+          <option key={subCategory.id} value={subCategory.id}>
+            {subCategory.subCategoryName}
+          </option>
+        ))}
+      </select>
+
       <div className="flex justify-end space-x-2">
         <button onClick={onSave} className="bg-blue-500 text-white px-4 py-2 rounded">
           Save
         </button>
-        <button onClick={onClose} className="bg-gray-300 px-4 py-2 rounded hover:bg-gray-400">
+        <button
+          onClick={onClose}
+          className="bg-gray-300 px-4 py-2 rounded hover:bg-gray-400"
+        >
           Cancel
         </button>
       </div>

@@ -9,7 +9,6 @@ export default function Vendors() {
       <SidebarProvider>
         <AppSidebar />
         <main>
-          <SidebarTrigger />
           <TaskTable/>
         </main>
       </SidebarProvider>

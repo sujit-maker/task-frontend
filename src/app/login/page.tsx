@@ -27,8 +27,7 @@ export default function LoginPage() {
       });
   
       if (!response.ok) {
-        const errorData = await response.json().catch(() => null);
-        const errorMessage = errorData?.message || "Invalid credentials";
+        const errorMessage = "Invalid credentials";
         throw new Error(errorMessage);
       }
   

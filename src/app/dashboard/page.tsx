@@ -8,7 +8,6 @@ export default function Dashboard() {
       <SidebarProvider>
         <AppSidebar />
         <main>
-          <SidebarTrigger />
         </main>
       </SidebarProvider>
     </>
