@@ -3,7 +3,7 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 
 interface Customer {
-  id: string;
+  id?: number;
   customerId: string;
   customerName: string;
   registerAddress: string;
@@ -13,21 +13,25 @@ interface Customer {
   emailId: string;
 }
 
+// Initial empty form state
+const initialFormState: Omit<Customer, "id"> = {
+  customerId: "",
+  customerName: "",
+  registerAddress: "",
+  gstNo: "",
+  contactName: "",
+  contactNumber: "",
+  emailId: "",
+};
+
 const CustomerTable: React.FC = () => {
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isUpdateModalOpen, setIsUpdateModalOpen] = useState(false);
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
-  const [formData, setFormData] = useState({
-    customerId: "",
-    customerName: "",
-    registerAddress: "",
-    gstNo: "",
-    contactName: "",
-    contactNumber: "",
-    emailId: "",
-  });
+  const [formData, setFormData] = useState(initialFormState);
 
+  // Fetch customers from API
   const fetchCustomers = async () => {
     try {
       const response = await axios.get("http://localhost:8000/customers");
@@ -37,15 +41,18 @@ const CustomerTable: React.FC = () => {
     }
   };
 
+  // Handle form input changes
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData((prevData) => ({ ...prevData, [name]: value }));
   };
 
+  // Create new customer
   const handleCreate = async () => {
     try {
       await axios.post("http://localhost:8000/customers", formData);
       alert("Customer added successfully!");
+      setFormData(initialFormState); // Reset form after creation
       setIsCreateModalOpen(false);
       fetchCustomers();
     } catch (error) {
@@ -53,23 +60,23 @@ const CustomerTable: React.FC = () => {
     }
   };
 
+  // Update customer details
   const handleUpdate = async () => {
-    if (selectedCustomer) {
-      try {
-        await axios.put(
-          `http://localhost:8000/customers/${selectedCustomer.id}`,
-          formData
-        );
-        alert("Customer updated successfully!");
-        setIsUpdateModalOpen(false);
-        fetchCustomers();
-      } catch (error) {
-        console.error("Error updating customer:", error);
-      }
+    if (!selectedCustomer) return;
+    try {
+      await axios.put(`http://localhost:8000/customers/${selectedCustomer.id}`, formData);
+      alert("Customer updated successfully!");
+      setFormData(initialFormState); // Reset form after update
+      setSelectedCustomer(null);
+      setIsUpdateModalOpen(false);
+      fetchCustomers();
+    } catch (error) {
+      console.error("Error updating customer:", error);
     }
   };
 
-  const handleDelete = async (id: string) => {
+  // Delete customer
+  const handleDelete = async (id: number) => {
     if (window.confirm("Are you sure you want to delete this customer?")) {
       try {
         await axios.delete(`http://localhost:8000/customers/${id}`);
@@ -81,6 +88,7 @@ const CustomerTable: React.FC = () => {
     }
   };
 
+  // Open update modal with selected customer's data
   const handleUpdateModalOpen = (customer: Customer) => {
     setSelectedCustomer(customer);
     setFormData({
@@ -95,14 +103,22 @@ const CustomerTable: React.FC = () => {
     setIsUpdateModalOpen(true);
   };
 
+  // Reset form on cancel
+  const handleCancel = () => {
+    setFormData(initialFormState); // Reset form
+    setSelectedCustomer(null);
+    setIsCreateModalOpen(false);
+    setIsUpdateModalOpen(false);
+  };
+
   useEffect(() => {
     fetchCustomers();
   }, []);
 
   return (
     <div className="flex h-screen mt-3">
-    <div className="flex-1 p-6 overflow-auto lg:ml-72 "> 
-      <div className="flex justify-between items-center mb-5 mt-16">
+      <div className="flex-1 p-6 overflow-auto lg:ml-72">
+        <div className="flex justify-between items-center mb-5 mt-16">
           <button
             onClick={() => setIsCreateModalOpen(true)}
             className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
@@ -141,7 +157,7 @@ const CustomerTable: React.FC = () => {
                       Edit
                     </button>
                     <button
-                      onClick={() => handleDelete(customer.id)}
+                      onClick={() => customer.id && handleDelete(customer.id)}
                       className="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600"
                     >
                       Delete
@@ -156,24 +172,12 @@ const CustomerTable: React.FC = () => {
 
       {/* Create Modal */}
       {isCreateModalOpen && (
-        <Modal
-          title="Add Customer"
-          formData={formData}
-          onInputChange={handleInputChange}
-          onSave={handleCreate}
-          onClose={() => setIsCreateModalOpen(false)}
-        />
+        <Modal title="Add Customer" formData={formData} onInputChange={handleInputChange} onSave={handleCreate} onClose={handleCancel} />
       )}
 
       {/* Update Modal */}
       {isUpdateModalOpen && selectedCustomer && (
-        <Modal
-          title="Update Customer"
-          formData={formData}
-          onInputChange={handleInputChange}
-          onSave={handleUpdate}
-          onClose={() => setIsUpdateModalOpen(false)}
-        />
+        <Modal title="Update Customer" formData={formData} onInputChange={handleInputChange} onSave={handleUpdate} onClose={handleCancel} />
       )}
     </div>
   );
@@ -182,7 +186,7 @@ const CustomerTable: React.FC = () => {
 // Modal Component for Add and Update
 const Modal: React.FC<{
   title: string;
-  formData: any;
+  formData: Omit<Customer, "id">;
   onInputChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onSave: () => void;
   onClose: () => void;
@@ -190,62 +194,19 @@ const Modal: React.FC<{
   <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
     <div className="bg-white p-6 rounded-lg w-96">
       <h2 className="text-xl font-bold mb-4">{title}</h2>
-      <input
-        name="customerId"
-        value={formData.customerId}
-        onChange={onInputChange}
-        placeholder="Customer ID"
-        className="w-full mb-3 p-2 border rounded"
-      />
-      <input
-        name="customerName"
-        value={formData.customerName}
-        onChange={onInputChange}
-        placeholder="Customer Name"
-        className="w-full mb-3 p-2 border rounded"
-      />
-      <input
-        name="registerAddress"
-        value={formData.registerAddress}
-        onChange={onInputChange}
-        placeholder="Register Address"
-        className="w-full mb-3 p-2 border rounded"
-      />
-      <input
-        name="gstNo"
-        value={formData.gstNo}
-        onChange={onInputChange}
-        placeholder="GST Number"
-        className="w-full mb-3 p-2 border rounded"
-      />
-      <input
-        name="contactName"
-        value={formData.contactName}
-        onChange={onInputChange}
-        placeholder="Contact Name"
-        className="w-full mb-3 p-2 border rounded"
-      />
-      <input
-        name="contactNumber"
-        value={formData.contactNumber}
-        onChange={onInputChange}
-        placeholder="Contact Number"
-        className="w-full mb-3 p-2 border rounded"
-      />
-      <input
-        name="emailId"
-        value={formData.emailId}
-        onChange={onInputChange}
-        placeholder="Email ID"
-        className="w-full mb-3 p-2 border rounded"
-      />
+      {Object.keys(formData).map((key) => (
+        <input
+          key={key}
+          name={key}
+          value={formData[key as keyof typeof formData]}
+          onChange={onInputChange}
+          placeholder={key.replace(/([A-Z])/g, " $1")}
+          className="w-full mb-3 p-2 border rounded"
+        />
+      ))}
       <div className="flex justify-end space-x-2">
-        <button onClick={onSave} className="bg-blue-500 text-white px-4 py-2 rounded">
-          Save
-        </button>
-        <button onClick={onClose} className="bg-gray-300 px-4 py-2 rounded hover:bg-gray-400">
-          Cancel
-        </button>
+        <button onClick={onSave} className="bg-blue-500 text-white px-4 py-2 rounded">Save</button>
+        <button onClick={onClose} className="bg-gray-300 px-4 py-2 rounded hover:bg-gray-400">Cancel</button>
       </div>
     </div>
   </div>

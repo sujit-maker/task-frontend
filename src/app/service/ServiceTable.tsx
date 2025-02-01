@@ -209,6 +209,7 @@ const ServiceTable: React.FC = () => {
         <Modal
           title="Add Service"
           formData={formData}
+          departments={departments}
           categories={categories}
           subCategories={subCategories}
           categoryId={categoryId}
@@ -225,6 +226,7 @@ const ServiceTable: React.FC = () => {
         <Modal
           title="Update Service"
           formData={formData}
+          departments={departments}
           categories={categories}
           subCategories={subCategories}
           categoryId={categoryId}
@@ -243,7 +245,9 @@ const ServiceTable: React.FC = () => {
 const Modal: React.FC<{
   title: string;
   formData: any;
+  departments: Department[];
   categories: Category[];
+
   subCategories: { id: number; subCategoryName: string }[];
   categoryId: string;
   subCategoryId: string;
@@ -255,6 +259,7 @@ const Modal: React.FC<{
 }> = ({
   title,
   formData,
+  departments,
   categories,
   subCategories,
   categoryId,
@@ -296,9 +301,9 @@ const Modal: React.FC<{
         className="w-full mb-3 p-2 border rounded"
       >
         <option value={0}>Select Department</option>
-        {categories.map((category) => (
-          <option key={category.id} value={category.id}>
-            {category.categoryName}
+        {departments.map((department) => (
+          <option key={department.id} value={department.id}>
+            {department.departmentName}
           </option>
         ))}
       </select>

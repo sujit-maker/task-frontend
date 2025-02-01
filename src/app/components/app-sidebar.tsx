@@ -7,8 +7,8 @@ import {
   BiStoreAlt,
   BiTask,
 } from "react-icons/bi";
-import { ChevronDown, ChevronUp, Menu, X } from "lucide-react";
-import { FaServicestack } from "react-icons/fa";
+import { ChevronDown, ChevronUp, Menu, Settings, X } from "lucide-react";
+import { FaRegAddressBook, FaServicestack } from "react-icons/fa";
 import { useAuth } from "../hooks/useAuth";
 
 export function AppSidebar() {
@@ -74,7 +74,7 @@ export function AppSidebar() {
               aria-controls="address-book-dropdown"
             >
               <div className="flex items-center">
-                <BiUserCircle className="w-6 h-6 hover:text-gray-400" />
+                <FaRegAddressBook className="w-6 h-6 hover:text-gray-400" />
                 {isSidebarOpen && <span className="ml-4">Address Book</span>}
               </div>
               <span>
@@ -123,7 +123,7 @@ export function AppSidebar() {
               aria-controls="service-dropdown"
             >
               <div className="flex items-center">
-                <FaServicestack className="w-6 h-6 hover:text-gray-400" />
+                <Settings className="w-6 h-6 hover:text-gray-400" />
                 {isSidebarOpen && <span className="ml-4">Service Management</span>}
               </div>
               <span>
@@ -225,6 +225,19 @@ export function AppSidebar() {
             </a>
           </li>
         </ul>
+      </div>
+      {/* Main Content */}
+      <div className="flex-1">
+        {/* Sidebar Toggle for small screens */}
+        <div className="fixed top-4 left-4 z-50 md:hidden">
+          <button
+            onClick={toggleSidebar}
+            className="p-2 bg-gray-800 text-white rounded-md hover:bg-gray-700"
+            aria-label={isSidebarOpen ? "Close Sidebar" : "Open Sidebar"}
+          >
+            {isSidebarOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+          </button>
+        </div>
       </div>
     </div>
   );

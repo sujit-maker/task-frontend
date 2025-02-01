@@ -126,14 +126,13 @@ const SiteTable: React.FC = () => {
             }}
             className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
           >
-            Add Site
+            Add Customer Site
           </button>
         </div>
         <div className="overflow-x-auto" style={{ maxWidth: "100vw" }}>
           <table className="min-w-[1000px] w-full text-center border-collapse border border-gray-200">
             <thead>
               <tr className="bg-gray-200">
-                <th className="border border-gray-300 px-4 py-2">Site ID</th>
                 <th className="border border-gray-300 px-4 py-2">Site Name</th>
                 <th className="border border-gray-300 px-4 py-2">Site Address</th>
                 <th className="border border-gray-300 px-4 py-2">Contact Name</th>
@@ -146,7 +145,6 @@ const SiteTable: React.FC = () => {
             <tbody>
               {sites.map((site) => (
                 <tr key={site.id} className="hover:bg-gray-100">
-                  <td className="border border-gray-300 px-4 py-2">{site.siteId}</td>
                   <td className="border border-gray-300 px-4 py-2">{site.siteName}</td>
                   <td className="border border-gray-300 px-4 py-2">{site.siteAddress}</td>
                   <td className="border border-gray-300 px-4 py-2">{site.contactName}</td>
@@ -188,7 +186,7 @@ const SiteTable: React.FC = () => {
 
       {isCreateModalOpen && (
         <Modal
-          title="Add Site"
+          title="Add Customer Site"
           formData={formData}
           customers={customers}
           onInputChange={handleInputChange}

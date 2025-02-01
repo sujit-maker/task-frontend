@@ -15,7 +15,7 @@ interface Service {
 }
 
 interface Customer {
-  username: string;
+  firstName: string;
   id: number;
   customerName: string;
 }
@@ -361,19 +361,19 @@ const TaskTable: React.FC = () => {
                     </td>
 
                     <td className="border border-gray-300 p-3">
-                      {hods.find((hod) => hod.id === task.hodId)?.username ||
+                      {hods.find((hod) => hod.id === task.hodId)?.firstName ||
                         "N/A"}
                     </td>
                     
                     <td className="border border-gray-300 p-3">
                       {managers.find((manager) => manager.id === task.managerId)
-                        ?.username || "N/A"}
+                        ?.firstName || "N/A"}
                     </td>
 
                     <td className="border border-gray-300 p-3">
                       {executives.find(
                         (executive) => executive.id === task.executiveId
-                      )?.username || "N/A"}
+                      )?.firstName || "N/A"}
                     </td>
 
                     <td className="border border-gray-300 px-4 py-2 ">
@@ -515,7 +515,7 @@ const TaskTable: React.FC = () => {
               <option value={0}>Select HOD</option>
               {formHods.map((hod) => (
                 <option key={hod.id} value={hod.id}>
-                  {hod.username}
+                  {hod.firstName}
                 </option>
               ))}
             </select>
@@ -532,7 +532,7 @@ const TaskTable: React.FC = () => {
               <option value={0}>Select Manager</option>
               {formManagers.map((manager) => (
                 <option key={manager.id} value={manager.id}>
-                  {manager.username}
+                  {manager.firstName}
                 </option>
               ))}
             </select>
@@ -550,7 +550,7 @@ const TaskTable: React.FC = () => {
               <option value={0}>Select Executive</option>
               {formExecutive.map((executive) => (
                 <option key={executive.id} value={executive.id}>
-                  {executive.username}
+                  {executive.firstName}
                 </option>
               ))}
             </select>

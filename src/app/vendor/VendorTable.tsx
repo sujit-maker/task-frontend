@@ -3,7 +3,7 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 
 interface Vendor {
-  id: number;
+  id?: number;
   vendorName: string;
   registerAddress: string;
   gstNo: string;
@@ -14,6 +14,15 @@ interface Vendor {
   managerId?:number;
 }
 
+const initialFormState: Vendor = {
+  vendorName: "",
+  registerAddress: "",
+  gstNo: "",
+  contactName: "",
+  contactNumber: "",
+  emailId: "",
+};
+
 const VendorTable: React.FC = () => {
   const [vendors, setVendors] = useState<Vendor[]>([]);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
@@ -21,7 +30,6 @@ const VendorTable: React.FC = () => {
   const [selectedVendor, setSelectedVendor] = useState<Vendor | null>(null);
 
   const [formData, setFormData] = useState<Vendor>({
-    id: 0,
     vendorName: '',
     registerAddress: '',
     gstNo: '',
@@ -53,25 +61,28 @@ const VendorTable: React.FC = () => {
     try {
       await axios.post("http://localhost:8000/vendors", formData);
       alert("Vendor created successfully!");
+      setFormData(initialFormState); // Reset form
       setIsCreateModalOpen(false);
       fetchVendors();
     } catch (error) {
       console.error("Error creating vendor:", error);
     }
   };
-
+  
   const handleUpdate = async () => {
     if (!selectedVendor) return;
     try {
       await axios.put(`http://localhost:8000/vendors/${selectedVendor.id}`, formData);
       alert("Vendor updated successfully!");
+      setFormData(initialFormState); // Reset form
+      setSelectedVendor(null);
       setIsUpdateModalOpen(false);
       fetchVendors();
     } catch (error) {
       console.error("Error updating vendor:", error);
     }
   };
-
+  
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData((prevData) => ({
@@ -86,6 +97,13 @@ const VendorTable: React.FC = () => {
     setIsUpdateModalOpen(true);
   };
 
+  const handleCancel = () => {
+    setFormData(initialFormState); // Reset form
+    setIsCreateModalOpen(false);
+    setIsUpdateModalOpen(false);
+    setSelectedVendor(null);
+  };
+  
   useEffect(() => {
     fetchVendors();
   }, []);
@@ -129,7 +147,7 @@ const VendorTable: React.FC = () => {
                       Edit
                     </button>
                     <button
-                      onClick={() => handleDelete(vendor.id)}
+                      onClick={() => handleDelete(vendor.id!)}
                       className="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600"
                       aria-label="Delete Vendor"
                     >
@@ -202,11 +220,12 @@ const VendorTable: React.FC = () => {
                 Create Vendor
               </button>
               <button
-                onClick={() => setIsCreateModalOpen(false)}
-                className="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600 ml-2"
-              >
-                Close
-              </button>
+  onClick={handleCancel}
+  className="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600 ml-2"
+>
+  Close
+</button>
+
             </div>
           </div>
         )}
