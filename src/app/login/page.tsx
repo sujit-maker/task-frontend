@@ -3,13 +3,13 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import { FaEye, FaEyeSlash } from "react-icons/fa"; // Import eye icons
+import { FaEye, FaEyeSlash } from "react-icons/fa"; 
 
 export default function LoginPage() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
-  const [showPassword, setShowPassword] = useState(false); // State for password visibility
+  const [showPassword, setShowPassword] = useState(false); 
   const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {

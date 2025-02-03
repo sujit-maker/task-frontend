@@ -25,6 +25,10 @@ const SubCategoryTable: React.FC = () => {
   });
   const [selectedSubCategory, setSelectedSubCategory] = useState<SubCategory | null>(null);
 
+    // Pagination States
+    const [currentPage, setCurrentPage] = useState(1);
+    const itemsPerPage = 8;
+
   // ✅ Fetch categories for the dropdown
   const fetchCategories = async () => {
     try {
@@ -119,6 +123,13 @@ const SubCategoryTable: React.FC = () => {
     fetchSubCategories();
   }, []);
 
+    // Pagination logic
+    const indexOfLastUser = currentPage * itemsPerPage;
+    const indexOfFirstUser = indexOfLastUser - itemsPerPage;
+    const currentSubcategories = subCategories.slice(indexOfFirstUser, indexOfLastUser);
+  
+    const paginate = (pageNumber: number) => setCurrentPage(pageNumber);
+
   return (
     <div className="flex h-screen mt-3">
       <div className="flex-1 p-6 overflow-auto lg:ml-72">
@@ -142,8 +153,8 @@ const SubCategoryTable: React.FC = () => {
               </tr>
             </thead>
             <tbody>
-              {subCategories.length > 0 ? (
-                subCategories.map((subCategory) => (
+              {currentSubcategories.length > 0 ? (
+                currentSubcategories.map((subCategory) => (
                   <tr key={subCategory.id} className="hover:bg-gray-100">
                     <td className="border border-gray-300 p-3">{subCategory.id}</td>
                     <td className="border border-gray-300 p-3">
@@ -177,6 +188,34 @@ const SubCategoryTable: React.FC = () => {
               )}
             </tbody>
           </table>
+        </div>
+        <div className="flex justify-center mt-4">
+          <button
+            onClick={() => paginate(currentPage - 1)}
+            className="bg-gray-300 text-gray-700 px-4 py-2 rounded hover:bg-gray-400 disabled:opacity-50"
+            disabled={currentPage === 1}
+          >
+            Previous
+          </button>
+          {/* Page Numbers */}
+          {[...Array(Math.ceil(subCategories.length / itemsPerPage))].map((_, index) => (
+            <button
+              key={index}
+              onClick={() => paginate(index + 1)}
+              className={`mx-1 px-4 py-2 rounded ${
+                currentPage === index + 1 ? "bg-blue-500 text-white" : "bg-gray-300 text-gray-700"
+              } hover:bg-blue-400`}
+            >
+              {index + 1}
+            </button>
+          ))}
+          <button
+            onClick={() => paginate(currentPage + 1)}
+            className="bg-gray-300 text-gray-700 px-4 py-2 rounded hover:bg-gray-400 disabled:opacity-50"
+            disabled={currentPage === Math.ceil(subCategories.length / itemsPerPage)}
+          >
+            Next
+          </button>
         </div>
       </div>
 

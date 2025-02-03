@@ -31,11 +31,16 @@ const CustomerTable: React.FC = () => {
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
   const [formData, setFormData] = useState(initialFormState);
 
+
+    // Pagination States
+    const [currentPage, setCurrentPage] = useState(1);
+    const itemsPerPage = 10;
+
   // Fetch customers from API
   const fetchCustomers = async () => {
     try {
       const response = await axios.get("http://localhost:8000/customers");
-      setCustomers(response.data);
+      setCustomers(response.data.reverse());
     } catch (error) {
       console.error("Error fetching customers:", error);
     }
@@ -115,6 +120,12 @@ const CustomerTable: React.FC = () => {
     fetchCustomers();
   }, []);
 
+  const indexOfLastUser = currentPage * itemsPerPage;
+  const indexOfFirstUser = indexOfLastUser - itemsPerPage;
+  const currentUsers = customers.slice(indexOfFirstUser, indexOfLastUser);
+
+  const paginate = (pageNumber: number) => setCurrentPage(pageNumber);
+
   return (
     <div className="flex h-screen mt-3">
       <div className="flex-1 p-6 overflow-auto lg:ml-72">
@@ -167,6 +178,34 @@ const CustomerTable: React.FC = () => {
               ))}
             </tbody>
           </table>
+        </div>
+        <div className="flex justify-center mt-4">
+          <button
+            onClick={() => paginate(currentPage - 1)}
+            className="bg-gray-300 text-gray-700 px-4 py-2 rounded hover:bg-gray-400 disabled:opacity-50"
+            disabled={currentPage === 1}
+          >
+            Previous
+          </button>
+          {/* Page Numbers */}
+          {[...Array(Math.ceil(customers.length / itemsPerPage))].map((_, index) => (
+            <button
+              key={index}
+              onClick={() => paginate(index + 1)}
+              className={`mx-1 px-4 py-2 rounded ${
+                currentPage === index + 1 ? "bg-blue-500 text-white" : "bg-gray-300 text-gray-700"
+              } hover:bg-blue-400`}
+            >
+              {index + 1}
+            </button>
+          ))}
+          <button
+            onClick={() => paginate(currentPage + 1)}
+            className="bg-gray-300 text-gray-700 px-4 py-2 rounded hover:bg-gray-400 disabled:opacity-50"
+            disabled={currentPage === Math.ceil(customers.length / itemsPerPage)}
+          >
+            Next
+          </button>
         </div>
       </div>
 

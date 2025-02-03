@@ -24,7 +24,7 @@ const DepartmentTable: React.FC = () => {
     setLoading(true);
     try {
       const response = await axios.get("http://localhost:8000/departments");
-      setDepartments(response.data);
+      setDepartments(response.data.reverse());
     } catch (error) {
       console.error("Error fetching departments:", error);
     } finally {

@@ -21,7 +21,7 @@ interface Department {
   departmentName: string;
 }
 
-const UserTable: React.FC = () => {
+  const UserTable: React.FC = () => {
   const [users, setUsers] = useState<User[]>([]);
   const [departments, setDepartments] = useState<Department[]>([]);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
@@ -30,17 +30,17 @@ const UserTable: React.FC = () => {
 
   // Pagination States
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 5; // Set the number of items to display per page
+  const itemsPerPage = 7; 
 
   const fetchUsers = async () => {
     try {
       const response = await axios.get("http://localhost:8000/users");
-      console.log("Fetched users:", response.data);
-      setUsers(response.data);
+      setUsers(response.data.reverse());
     } catch (error) {
       console.error("Error fetching users:", error);
     }
   };
+
 
   const fetchDepartments = async () => {
     try {

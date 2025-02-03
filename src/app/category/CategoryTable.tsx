@@ -23,10 +23,14 @@ const CategoryTable: React.FC = () => {
     subCategories: [{ subCategoryName: "" }],
   });
 
+    // Pagination States
+    const [currentPage, setCurrentPage] = useState(1);
+    const itemsPerPage = 8;
+
   const fetchCategories = async () => {
     try {
       const response = await axios.get("http://localhost:8000/category");
-      setCategories(response.data);
+      setCategories(response.data.reverse());
     } catch (error) {
       console.error("Error fetching categories:", error);
     }
@@ -76,28 +80,16 @@ const CategoryTable: React.FC = () => {
     }
   };
 
-  const addSubCategoryField = () => {
-    setFormData({
-      ...formData,
-      subCategories: [...formData.subCategories, { subCategoryName: "" }],
-    });
-  };
-
-  const removeSubCategoryField = (index: number) => {
-    const updatedSubCategories = formData.subCategories.filter((_, i) => i !== index);
-    setFormData({ ...formData, subCategories: updatedSubCategories });
-  };
-
-  const handleSubCategoryChange = (index: number, value: string) => {
-    const updatedSubCategories = formData.subCategories.map((sub, i) =>
-      i === index ? { ...sub, subCategoryName: value } : sub
-    );
-    setFormData({ ...formData, subCategories: updatedSubCategories });
-  };
-
   useEffect(() => {
     fetchCategories();
   }, []);
+
+    // Pagination logic
+    const indexOfLastUser = currentPage * itemsPerPage;
+    const indexOfFirstUser = indexOfLastUser - itemsPerPage;
+    const currentCategories = categories.slice(indexOfFirstUser, indexOfLastUser);
+  
+    const paginate = (pageNumber: number) => setCurrentPage(pageNumber);
 
   return (
     <div className="flex h-screen mt-3">
@@ -124,8 +116,8 @@ const CategoryTable: React.FC = () => {
               </tr>
             </thead>
             <tbody>
-              {categories.length > 0 ? (
-                categories.map((category) => (
+              {currentCategories.length > 0 ? (
+                currentCategories.map((category) => (
                   <tr key={category.id} className="hover:bg-gray-100">
                     <td className="border border-gray-300 p-3">{category.id}</td>
                     <td className="border border-gray-300 p-3">{category.categoryName}</td>
@@ -163,6 +155,34 @@ const CategoryTable: React.FC = () => {
               )}
             </tbody>
           </table>
+        </div>
+        <div className="flex justify-center mt-4">
+          <button
+            onClick={() => paginate(currentPage - 1)}
+            className="bg-gray-300 text-gray-700 px-4 py-2 rounded hover:bg-gray-400 disabled:opacity-50"
+            disabled={currentPage === 1}
+          >
+            Previous
+          </button>
+          {/* Page Numbers */}
+          {[...Array(Math.ceil(categories.length / itemsPerPage))].map((_, index) => (
+            <button
+              key={index}
+              onClick={() => paginate(index + 1)}
+              className={`mx-1 px-4 py-2 rounded ${
+                currentPage === index + 1 ? "bg-blue-500 text-white" : "bg-gray-300 text-gray-700"
+              } hover:bg-blue-400`}
+            >
+              {index + 1}
+            </button>
+          ))}
+          <button
+            onClick={() => paginate(currentPage + 1)}
+            className="bg-gray-300 text-gray-700 px-4 py-2 rounded hover:bg-gray-400 disabled:opacity-50"
+            disabled={currentPage === Math.ceil(categories.length / itemsPerPage)}
+          >
+            Next
+          </button>
         </div>
       </div>
 

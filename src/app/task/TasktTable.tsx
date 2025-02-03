@@ -75,6 +75,10 @@ const TaskTable: React.FC = () => {
     service: { id: 0, serviceName: "" },
   });
 
+  // Pagination States
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 8;
+
   const fetchTasks = async () => {
     const userId = localStorage.getItem("userId");
     const userType = localStorage.getItem("userType");
@@ -82,15 +86,15 @@ const TaskTable: React.FC = () => {
     try {
       let response;
       if (userType === "SUPERADMIN") {
-        response = await axios.get("http://localhost:8000/tasks");
+        response = await axios.get("http://192.168.29.225:8000/tasks");
       } else {
         response = await axios.get(
-          `http://localhost:8000/tasks/user/${userId}`
+          `http://192.168.29.225:8000/tasks/user/${userId}`
         );
       }
 
       if (response.data && Array.isArray(response.data)) {
-        setTasks(response.data);
+        setTasks(response.data.reverse());
       } else {
         setTasks([]);
       }
@@ -101,7 +105,9 @@ const TaskTable: React.FC = () => {
 
   const fetchDepartments = async () => {
     try {
-      const response = await axios.get("http://localhost:8000/departments");
+      const response = await axios.get(
+        "http://192.168.29.225:8000/departments"
+      );
       setDepartments(response.data);
     } catch (error) {
       console.log("Error fetching departments:", error);
@@ -111,7 +117,7 @@ const TaskTable: React.FC = () => {
   const fetchExecutives = async () => {
     try {
       const response = await axios.get(
-        "http://localhost:8000/users/executives"
+        "http://192.168.29.225:8000/users/executives"
       );
       setExecutives(response.data);
     } catch (error) {
@@ -121,7 +127,9 @@ const TaskTable: React.FC = () => {
 
   const fetchManagers = async () => {
     try {
-      const response = await axios.get("http://localhost:8000/users/managers");
+      const response = await axios.get(
+        "http://192.168.29.225:8000/users/managers"
+      );
       setManagers(response.data);
     } catch (error) {
       console.log("Error fetching managers:", error);
@@ -131,7 +139,7 @@ const TaskTable: React.FC = () => {
   const fetchHodsByDepartment = async (departmentName: string) => {
     try {
       const response = await axios.get(
-        `http://localhost:8000/users/hods/${departmentName}`
+        `http://192.168.29.225:8000/users/hods/${departmentName}`
       );
       setFormHods(response.data);
     } catch (error) {
@@ -143,7 +151,7 @@ const TaskTable: React.FC = () => {
   const fetchManagersByDepartment = async (departmentName: string) => {
     try {
       const response = await axios.get(
-        `http://localhost:8000/users/manager/${departmentName}`
+        `http://192.168.29.225:8000/users/manager/${departmentName}`
       );
       setFormManagers(response.data);
     } catch (error) {
@@ -155,7 +163,7 @@ const TaskTable: React.FC = () => {
   const fetchExecutivesByDepartment = async (departmentName: string) => {
     try {
       const response = await axios.get(
-        `http://localhost:8000/users/executive/${departmentName}`
+        `http://192.168.29.225:8000/users/executive/${departmentName}`
       );
       setFormExecutive(response.data);
     } catch (error) {
@@ -167,7 +175,7 @@ const TaskTable: React.FC = () => {
   const fetchServicesByDepartment = async (departmentId: number) => {
     try {
       const response = await axios.get(
-        `http://localhost:8000/tasks/services/${departmentId}`
+        `http://192.168.29.225:8000/tasks/services/${departmentId}`
       );
       setFormServices(response.data);
     } catch (error) {
@@ -178,7 +186,7 @@ const TaskTable: React.FC = () => {
 
   const fetchCustomers = async () => {
     try {
-      const response = await axios.get("http://localhost:8000/customers");
+      const response = await axios.get("http://192.168.29.225:8000/customers");
       setCustomers(response.data);
     } catch (error) {
       console.log("Error fetching customers:", error);
@@ -188,7 +196,7 @@ const TaskTable: React.FC = () => {
   const fetchSitesByCustomer = async (customerId: number) => {
     try {
       const response = await axios.get(
-        `http://localhost:8000/sites/customer/${customerId}`
+        `http://192.168.29.225:8000/sites/customer/${customerId}`
       );
       setSites(response.data);
     } catch (error) {
@@ -199,7 +207,7 @@ const TaskTable: React.FC = () => {
 
   const handleDelete = async (id: number) => {
     try {
-      await axios.delete(`http://localhost:8000/tasks/${id}`);
+      await axios.delete(`http://192.168.29.225:8000/tasks/${id}`);
       alert("Task deleted successfully!");
       fetchTasks();
     } catch (error) {
@@ -209,7 +217,7 @@ const TaskTable: React.FC = () => {
 
   const fetchAllHods = async () => {
     try {
-      const response = await axios.get("http://localhost:8000/users/hods");
+      const response = await axios.get("http://192.168.29.225:8000/users/hods");
       setHods(response.data);
     } catch (error) {
       console.log("Error fetching all HODs:", error);
@@ -234,12 +242,12 @@ const TaskTable: React.FC = () => {
 
       if (isEditing) {
         await axios.put(
-          `http://localhost:8000/tasks/${formData.id}`,
+          `http://192.168.29.225:8000/tasks/${formData.id}`,
           sanitizedData
         );
         alert("Task updated successfully!");
       } else {
-        await axios.post("http://localhost:8000/tasks", sanitizedData);
+        await axios.post("http://192.168.29.225:8000/tasks", sanitizedData);
         alert("Task created successfully!");
       }
 
@@ -253,8 +261,28 @@ const TaskTable: React.FC = () => {
 
   const openModal = (task: Task | null = null) => {
     setIsEditing(!!task);
-    setFormData(
-      task || {
+
+    if (task) {
+      setFormData(task);
+      const departmentName =
+        departments.find((dept) => dept.id === task.departmentId)
+          ?.departmentName || "";
+
+      if (task.departmentId) {
+        fetchServicesByDepartment(task.departmentId);
+      }
+
+      if (departmentName) {
+        fetchHodsByDepartment(departmentName);
+        fetchManagersByDepartment(departmentName);
+        fetchExecutivesByDepartment(departmentName);
+      }
+
+      if (task.customerId) {
+        fetchSitesByCustomer(task.customerId);
+      }
+    } else {
+      setFormData({
         departmentId: 0,
         serviceId: 0,
         customerId: 0,
@@ -269,8 +297,9 @@ const TaskTable: React.FC = () => {
         executiveId: 0,
         site: { id: 0, siteName: "" },
         service: { id: 0, serviceName: "" },
-      }
-    );
+      });
+    }
+
     setIsModalOpen(true);
   };
 
@@ -308,10 +337,16 @@ const TaskTable: React.FC = () => {
     }
   }, [userId]);
 
+  const indexOfLastUser = currentPage * itemsPerPage;
+  const indexOfFirstUser = indexOfLastUser - itemsPerPage;
+  const currentTasks = tasks.slice(indexOfFirstUser, indexOfLastUser);
+
+  const paginate = (pageNumber: number) => setCurrentPage(pageNumber);
+
   return (
     <div className="flex h-screen mt-3">
-    <div className="flex-1 p-6 overflow-auto lg:ml-72 "> 
-      <div className="flex justify-between items-center mb-5 mt-16">
+      <div className="flex-1 p-6 overflow-auto lg:ml-72 ">
+        <div className="flex justify-between items-center mb-5 mt-16">
           <button
             onClick={() => openModal()}
             className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
@@ -326,8 +361,10 @@ const TaskTable: React.FC = () => {
               <tr className="bg-gray-200">
                 <th className="border border-gray-300 p-3">Department</th>
                 <th className="border border-gray-300 p-3">Service</th>
+                <th className="border border-gray-300 p-3">WorkScope</th>
                 <th className="border border-gray-300 p-3">Customer</th>
                 <th className="border border-gray-300 p-3">Site</th>
+                <th className="border border-gray-300 p-3">Proposed Date</th>
                 <th className="border border-gray-300 p-3">HOD</th>
                 <th className="border border-gray-300 p-3">Manager</th>
                 <th className="border border-gray-300 p-3">Executive</th>
@@ -335,63 +372,84 @@ const TaskTable: React.FC = () => {
               </tr>
             </thead>
             <tbody>
-              {tasks.length > 0 ? (
-                tasks.map((task) => (
-                  <tr key={task.id} className="hover:bg-gray-100">
-                    <td className="border border-gray-300 p-3">
-                      {
-                        departments.find(
-                          (dept) => dept.id === task.departmentId
-                        )?.departmentName
-                      }
-                    </td>
-                    <td className="border border-gray-300 p-3">
-                      {task.service?.serviceName || "No Service"}
-                    </td>
-
-                    <td className="border border-gray-300 p-3">
-                      {
-                        customers.find(
-                          (customer) => customer.id === task.customerId
-                        )?.customerName
-                      }
-                    </td>
-                    <td className="border border-gray-300 p-3">
-                      {task.site?.siteName || "No Service"}
-                    </td>
-
-                    <td className="border border-gray-300 p-3">
-                      {hods.find((hod) => hod.id === task.hodId)?.firstName ||
-                        "N/A"}
-                    </td>
-                    
-                    <td className="border border-gray-300 p-3">
-                      {managers.find((manager) => manager.id === task.managerId)
-                        ?.firstName || "N/A"}
-                    </td>
-
-                    <td className="border border-gray-300 p-3">
-                      {executives.find(
-                        (executive) => executive.id === task.executiveId
-                      )?.firstName || "N/A"}
-                    </td>
-
-                    <td className="border border-gray-300 px-4 py-2 ">
-                    <button
-                        onClick={() => openModal(task)}
-                        className="bg-yellow-500 text-white px-3 py-1 rounded hover:bg-yellow-600 mr-2"
-                      >
-                        <FaEdit className="inline-block" />
-                      </button>
-                      <button
-                        onClick={() => handleDelete(task.id!)}
-                        className="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600"
-                      >
-                        <FaTrashAlt className="inline-block" />
-                      </button>
-                    </td>
-                  </tr>
-                ))
+              {currentTasks.length > 0 ? (
+                [...tasks]
+                  .sort((a, b) => {
+                    const dateA = a.proposedDate
+                      ? new Date(a.proposedDate).getTime()
+                      : 0;
+                    const dateB = b.proposedDate
+                      ? new Date(b.proposedDate).getTime()
+                      : 0;
+                    return dateB - dateA;
+                  })
+                  .map((task) => (
+                    <tr key={task.id} className="hover:bg-gray-100">
+                      <td className="border border-gray-300 p-3">
+                        {
+                          departments.find(
+                            (dept) => dept.id === task.departmentId
+                          )?.departmentName
+                        }
+                      </td>
+                      <td className="border border-gray-300 p-3">
+                        {task.service?.serviceName || "No Service"}
+                      </td>
+                      <td className="border border-gray-300 p-3">
+                        {task.workScope || "No WorkScope"}
+                      </td>
+                      <td className="border border-gray-300 p-3">
+                        {
+                          customers.find(
+                            (customer) => customer.id === task.customerId
+                          )?.customerName
+                        }
+                      </td>
+                      <td className="border border-gray-300 p-3">
+                        {task.site?.siteName || "No Service"}
+                      </td>
+                      <td className="border border-gray-300 p-3">
+                        {task.proposedDate
+                          ? new Date(task.proposedDate).toLocaleDateString(
+                              "en-GB",
+                              {
+                                day: "2-digit",
+                                month: "2-digit",
+                                year: "2-digit",
+                              }
+                            )
+                          : "N/A"}
+                      </td>
+                      <td className="border border-gray-300 p-3">
+                        {hods.find((hod) => hod.id === task.hodId)?.firstName ||
+                          "N/A"}
+                      </td>
+                      <td className="border border-gray-300 p-3">
+                        {managers.find(
+                          (manager) => manager.id === task.managerId
+                        )?.firstName || "N/A"}
+                      </td>
+                      <td className="border border-gray-300 p-3">
+                        {executives.find(
+                          (executive) => executive.id === task.executiveId
+                        )?.firstName || "N/A"}
+                      </td>
+                      <td className="border border-gray-300 px-4 py-2 ">
+                        <button
+                          onClick={() => openModal(task)}
+                          className="bg-yellow-500 text-white px-3 py-1 rounded hover:bg-yellow-600 mr-2"
+                        >
+                          <FaEdit className="inline-block" />
+                        </button>
+                        <button
+                          onClick={() => handleDelete(task.id!)}
+                          className="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600"
+                        >
+                          <FaTrashAlt className="inline-block" />
+                        </button>
+                      </td>
+                    </tr>
+                  ))
               ) : (
                 <tr>
                   <td colSpan={5} className="p-3 text-gray-500">
@@ -402,202 +460,238 @@ const TaskTable: React.FC = () => {
             </tbody>
           </table>
         </div>
+        <div className="flex justify-center mt-4">
+          <button
+            onClick={() => paginate(currentPage - 1)}
+            className="bg-gray-300 text-gray-700 px-4 py-2 rounded hover:bg-gray-400 disabled:opacity-50"
+            disabled={currentPage === 1}
+          >
+            Previous
+          </button>
+          {/* Page Numbers */}
+          {[...Array(Math.ceil(tasks.length / itemsPerPage))].map((_, index) => (
+            <button
+              key={index}
+              onClick={() => paginate(index + 1)}
+              className={`mx-1 px-4 py-2 rounded ${
+                currentPage === index + 1 ? "bg-blue-500 text-white" : "bg-gray-300 text-gray-700"
+              } hover:bg-blue-400`}
+            >
+              {index + 1}
+            </button>
+          ))}
+          <button
+            onClick={() => paginate(currentPage + 1)}
+            className="bg-gray-300 text-gray-700 px-4 py-2 rounded hover:bg-gray-400 disabled:opacity-50"
+            disabled={currentPage === Math.ceil(tasks.length / itemsPerPage)}
+          >
+            Next
+          </button>
+        </div>
+
       </div>
 
+     
       {isModalOpen && (
-        <div className="fixed inset-0 flex items-center justify-center bg-gray-500 bg-opacity-50">
-          <div className="bg-white p-6 rounded shadow-lg w-96 max-h-[90vh] overflow-y-auto">
-            <h2 className="text-lg font-semibold mb-4">
+        <div className="fixed inset-0 flex items-center justify-center mt-5 bg-gray-800 bg-opacity-50 z-50">
+          <div className="bg-white p-6 rounded shadow-lg w-full max-w-md mx-4 max-h-[80vh] overflow-y-auto">
+            <h2 className="text-lg font-semibold mb-4 text-center">
               {isEditing ? "Edit Task" : "Add Task"}
             </h2>
 
-            <select
-              value={formData.departmentId}
-              onChange={(e) => {
-                const departmentId = parseInt(e.target.value, 10);
-                const departmentName =
-                  departments.find((dept) => dept.id === departmentId)
-                    ?.departmentName || "";
-                handleDepartmentChange(departmentId, departmentName);
-              }}
-              className="border p-2 rounded mb-4 w-full"
-            >
-              <option value={0}>Select Department</option>
-              {departments.map((department) => (
-                <option key={department.id} value={department.id}>
-                  {department.departmentName}
-                </option>
-              ))}
-            </select>
+            <div className="space-y-3">
+              <select
+                value={formData.departmentId || ""}
+                onChange={(e) => {
+                  const departmentId = parseInt(e.target.value, 10);
+                  const departmentName =
+                    departments.find((dept) => dept.id === departmentId)
+                      ?.departmentName || "";
+                  handleDepartmentChange(departmentId, departmentName);
+                }}
+                className="border p-2 rounded w-full"
+              >
+                <option value="">Select Department</option>
+                {departments.map((department) => (
+                  <option key={department.id} value={department.id}>
+                    {department.departmentName}
+                  </option>
+                ))}
+              </select>
 
-            <select
-              value={formData.serviceId}
-              onChange={(e) =>
-                setFormData({
-                  ...formData,
-                  serviceId: parseInt(e.target.value, 10),
-                })
-              }
-              className="border p-2 rounded mb-4 w-full"
-            >
-              <option value={0}>Select Service</option>
-              {formServices.map((service) => (
-                <option key={service.id} value={service.id}>
-                  {service.serviceName}
-                </option>
-              ))}
-            </select>
+              <select
+                value={formData.serviceId || ""}
+                onChange={(e) =>
+                  setFormData({
+                    ...formData,
+                    serviceId: parseInt(e.target.value, 10),
+                  })
+                }
+                className="border p-2 rounded w-full"
+              >
+                <option value="">Select Service</option>
+                {formServices.map((service) => (
+                  <option key={service.id} value={service.id}>
+                    {service.serviceName}
+                  </option>
+                ))}
+              </select>
 
-            <select
-              value={formData.customerId}
-              onChange={(e) =>
-                handleCustomerChange(parseInt(e.target.value, 10))
-              }
-              className="border p-2 rounded mb-4 w-full"
-            >
-              <option value={0}>Select Customer</option>
-              {customers.map((customer) => (
-                <option key={customer.id} value={customer.id}>
-                  {customer.customerName}
-                </option>
-              ))}
-            </select>
+              <select
+                value={formData.customerId || ""}
+                onChange={(e) =>
+                  handleCustomerChange(parseInt(e.target.value, 10))
+                }
+                className="border p-2 rounded w-full"
+              >
+                <option value="">Select Customer</option>
+                {customers.map((customer) => (
+                  <option key={customer.id} value={customer.id}>
+                    {customer.customerName}
+                  </option>
+                ))}
+              </select>
 
-            <select
-              value={formData.siteId}
-              onChange={(e) =>
-                setFormData({
-                  ...formData,
-                  siteId: parseInt(e.target.value, 10),
-                })
-              }
-              className="border p-2 rounded mb-4 w-full"
-            >
-              <option value={0}>Select Site</option>
-              {sites.map((site) => (
-                <option key={site.id} value={site.id}>
-                  {site.siteName}
-                </option>
-              ))}
-            </select>
+              <select
+                value={formData.siteId || ""}
+                onChange={(e) =>
+                  setFormData({
+                    ...formData,
+                    siteId: parseInt(e.target.value, 10),
+                  })
+                }
+                className="border p-2 rounded w-full"
+              >
+                <option value="">Select Site</option>
+                {sites.map((site) => (
+                  <option key={site.id} value={site.id}>
+                    {site.siteName}
+                  </option>
+                ))}
+              </select>
 
-            <input
-              type="text"
-              value={formData.workScope}
-              onChange={(e) =>
-                setFormData({ ...formData, workScope: e.target.value })
-              }
-              placeholder="Work Scope"
-              className="border p-2 rounded mb-4 w-full"
-            />
+              <input
+                type="text"
+                value={formData.workScope || ""}
+                onChange={(e) =>
+                  setFormData({ ...formData, workScope: e.target.value })
+                }
+                placeholder="Work Scope"
+                className="border p-2 rounded w-full"
+              />
 
-            <label htmlFor="">Proposed Date</label>
-            <input
-              type="date"
-              value={formData.proposedDate}
-              onChange={(e) =>
-                setFormData({ ...formData, proposedDate: e.target.value })
-              }
-              placeholder="Proposed Date"
-              className="border p-2 rounded mb-4 w-full"
-            />
+              <label className="block text-sm font-medium">Proposed Date</label>
+              <input
+                type="date"
+                value={formData.proposedDate || ""}
+                onChange={(e) =>
+                  setFormData({ ...formData, proposedDate: e.target.value })
+                }
+                className="border p-2 rounded w-full"
+              />
 
-            <select
-              value={formData.hodId}
-              onChange={(e) =>
-                setFormData({
-                  ...formData,
-                  hodId: parseInt(e.target.value, 10),
-                })
-              }
-              className="border p-2 rounded mb-4 w-full"
-            >
-              <option value={0}>Select HOD</option>
-              {formHods.map((hod) => (
-                <option key={hod.id} value={hod.id}>
-                  {hod.firstName}
-                </option>
-              ))}
-            </select>
-            <select
-              value={formData.managerId}
-              onChange={(e) =>
-                setFormData({
-                  ...formData,
-                  managerId: parseInt(e.target.value, 10),
-                })
-              }
-              className="border p-2 rounded mb-4 w-full max-h-40 overflow-y-auto"
-            >
-              <option value={0}>Select Manager</option>
-              {formManagers.map((manager) => (
-                <option key={manager.id} value={manager.id}>
-                  {manager.firstName}
-                </option>
-              ))}
-            </select>
+              <select
+                value={formData.hodId || ""}
+                onChange={(e) =>
+                  setFormData({
+                    ...formData,
+                    hodId: parseInt(e.target.value, 10),
+                  })
+                }
+                className="border p-2 rounded w-full"
+              >
+                <option value="">Select HOD</option>
+                {formHods.map((hod) => (
+                  <option key={hod.id} value={hod.id}>
+                    {hod.firstName}
+                  </option>
+                ))}
+              </select>
 
-            <select
-              value={formData.executiveId}
-              onChange={(e) =>
-                setFormData({
-                  ...formData,
-                  executiveId: parseInt(e.target.value, 10),
-                })
-              }
-              className="border p-2 rounded mb-4 w-full max-h-40 overflow-y-auto"
-            >
-              <option value={0}>Select Executive</option>
-              {formExecutive.map((executive) => (
-                <option key={executive.id} value={executive.id}>
-                  {executive.firstName}
-                </option>
-              ))}
-            </select>
+              <select
+                value={formData.managerId || ""}
+                onChange={(e) =>
+                  setFormData({
+                    ...formData,
+                    managerId: parseInt(e.target.value, 10),
+                  })
+                }
+                className="border p-2 rounded w-full max-h-40 overflow-y-auto"
+              >
+                <option value="">Select Manager</option>
+                {formManagers.map((manager) => (
+                  <option key={manager.id} value={manager.id}>
+                    {manager.firstName}
+                  </option>
+                ))}
+              </select>
 
-            <select
-              value={formData.priority}
-              onChange={(e) =>
-                setFormData({ ...formData, priority: e.target.value })
-              }
-              className="border p-2 rounded mb-4 w-full"
-            >
-              <option value="">Select Priority</option>
-              <option value="High">High</option>
-              <option value="Mid">Mid</option>
-              <option value="Low">Low</option>
-            </select>
-            <textarea
-              value={formData.remark}
-              onChange={(e) =>
-                setFormData({ ...formData, remark: e.target.value })
-              }
-              placeholder="Remark"
-              className="border p-2 rounded mb-4 w-full"
-            />
-            <select
-              value={formData.status}
-              onChange={(e) =>
-                setFormData({ ...formData, status: e.target.value })
-              }
-              className="border p-2 rounded mb-4 w-full"
-              disabled
-            >
-              <option value="Open">Open</option>
-            </select>
+              <select
+                value={formData.executiveId || ""}
+                onChange={(e) =>
+                  setFormData({
+                    ...formData,
+                    executiveId: parseInt(e.target.value, 10),
+                  })
+                }
+                className="border p-2 rounded w-full max-h-40 overflow-y-auto"
+              >
+                <option value="">Select Executive</option>
+                {formExecutive.map((executive) => (
+                  <option key={executive.id} value={executive.id}>
+                    {executive.firstName}
+                  </option>
+                ))}
+              </select>
 
-            <button
-              onClick={handleSave}
-              className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 mr-2"
-            >
-              Save
-            </button>
-            <button
-              onClick={() => setIsModalOpen(false)}
-              className="bg-gray-300 px-4 py-2 rounded hover:bg-gray-400"
-            >
-              Cancel
-            </button>
+              <select
+                value={formData.priority || ""}
+                onChange={(e) =>
+                  setFormData({ ...formData, priority: e.target.value })
+                }
+                className="border p-2 rounded w-full"
+              >
+                <option value="">Select Priority</option>
+                <option value="High">High</option>
+                <option value="Mid">Mid</option>
+                <option value="Low">Low</option>
+              </select>
+
+              <textarea
+                value={formData.remark || ""}
+                onChange={(e) =>
+                  setFormData({ ...formData, remark: e.target.value })
+                }
+                placeholder="Remark"
+                className="border p-2 rounded w-full"
+              />
+
+              <select
+                value={formData.status || ""}
+                onChange={(e) =>
+                  setFormData({ ...formData, status: e.target.value })
+                }
+                className="border p-2 rounded w-full"
+                disabled
+              >
+                <option value="Open">Open</option>
+              </select>
+
+              <div className="flex flex-col sm:flex-row gap-2">
+                <button
+                  onClick={handleSave}
+                  className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 w-full"
+                >
+                  Save
+                </button>
+                <button
+                  onClick={() => setIsModalOpen(false)}
+                  className="bg-gray-400 text-white px-4 py-2 rounded hover:bg-gray-500 w-full"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}
