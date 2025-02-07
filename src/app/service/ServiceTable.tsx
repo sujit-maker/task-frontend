@@ -2,7 +2,6 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 
-// Define the Department, Service, and other necessary types
 interface Department {
   id: number;
   departmentName: string;
@@ -87,7 +86,7 @@ const ServiceTable: React.FC = () => {
     const selectedCategoryId = e.target.value;
     setCategoryId(selectedCategoryId);
     fetchSubCategories(selectedCategoryId);
-    setSubCategoryId(""); // Reset subcategory selection when category changes
+    setSubCategoryId(""); 
   };
 
   const handleSubCategoryChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -100,7 +99,7 @@ const ServiceTable: React.FC = () => {
     const { name, value } = e.target;
     setFormData((prevData) => ({
       ...prevData,
-      [name]: name === "departmentId" ? +value : value, // Ensure departmentId is a number
+      [name]: name === "departmentId" ? +value : value, 
     }));
   };
 
@@ -115,7 +114,7 @@ const ServiceTable: React.FC = () => {
       console.error("Error adding service:", error);
     }
   };
-
+    
   const handleUpdate = async () => {
     if (selectedService) {
       try {
@@ -129,7 +128,7 @@ const ServiceTable: React.FC = () => {
       }
     }
   };
-
+  
   const handleDelete = async (id: number) => {
     if (window.confirm("Are you sure you want to delete this service?")) {
       try {
@@ -141,7 +140,7 @@ const ServiceTable: React.FC = () => {
       }
     }
   };
-
+  
     // Pagination logic
     const indexOfLastUser = currentPage * itemsPerPage;
     const indexOfFirstUser = indexOfLastUser - itemsPerPage;

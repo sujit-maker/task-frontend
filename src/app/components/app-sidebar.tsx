@@ -8,18 +8,17 @@ import {
   BiSolidDashboard,
 } from "react-icons/bi";
 import { ChevronDown, ChevronUp, Menu, Settings, X, LogOut } from "lucide-react";
-import { FaRegAddressBook, FaLock } from "react-icons/fa";
+import { FaRegAddressBook } from "react-icons/fa";
 import { useAuth } from "../hooks/useAuth";
 import { useRouter } from "next/navigation";
 
-export function AppSidebar() {
+  export function AppSidebar() {
   const { userType } = useAuth();
   const router = useRouter();
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [inventoryOpen, setInventoryOpen] = useState(false);
   const [serviceOpen, setServiceOpen] = useState(false);
   const [addressBookOpen, setAddressBookOpen] = useState(false);
-  const [isModalOpen, setIsModalOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {

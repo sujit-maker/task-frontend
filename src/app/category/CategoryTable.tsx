@@ -37,7 +37,7 @@ const CategoryTable: React.FC = () => {
   };
 
   const handleDelete = async (id: number) => {
-    if (window.confirm("Are you sure you want to delete this category and its subcategories?")) {
+    if (window.confirm("Are you sure you want to delete this category?")) {
       try {
         await axios.delete(`http://localhost:8000/category/${id}`);
         alert("Category deleted successfully!");
@@ -71,12 +71,12 @@ const CategoryTable: React.FC = () => {
         categoryName: formData.categoryName,
         subCategories: formData.subCategories,
       });
-      alert("Category and subcategories updated successfully!");
+      alert("Category updated successfully!");
       setIsUpdateModalOpen(false);
       fetchCategories();
     } catch (error) {
-      console.error("Error updating category or subcategories:", error);
-      alert("Failed to update category or subcategories.");
+      console.error("Error updating category:", error);
+      alert("Failed to update category.");
     }
   };
 

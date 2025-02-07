@@ -434,19 +434,21 @@ const TaskTable: React.FC = () => {
                           (executive) => executive.id === task.executiveId
                         )?.firstName || "N/A"}
                       </td>
-                      <td className="border border-gray-300 px-4 py-2 ">
-                        <button
-                          onClick={() => openModal(task)}
-                          className="bg-yellow-500 text-white px-3 py-1 rounded hover:bg-yellow-600 mr-2"
-                        >
-                          <FaEdit className="inline-block" />
-                        </button>
-                        <button
-                          onClick={() => handleDelete(task.id!)}
-                          className="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600"
-                        >
-                          <FaTrashAlt className="inline-block" />
-                        </button>
+                      <td className="border border-gray-300 p-3">
+                        <div className="flex justify-center space-x-2">
+                          <button
+                            onClick={() => openModal(task)}
+                            className="bg-yellow-500 text-white px-3 py-1 rounded hover:bg-yellow-600"
+                          >
+                            <FaEdit className="inline-block " />
+                          </button>
+                          <button
+                            onClick={() => handleDelete(task.id!)}
+                            className="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600"
+                          >
+                            <FaTrashAlt className="inline-block " />
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))
@@ -469,17 +471,21 @@ const TaskTable: React.FC = () => {
             Previous
           </button>
           {/* Page Numbers */}
-          {[...Array(Math.ceil(tasks.length / itemsPerPage))].map((_, index) => (
-            <button
-              key={index}
-              onClick={() => paginate(index + 1)}
-              className={`mx-1 px-4 py-2 rounded ${
-                currentPage === index + 1 ? "bg-blue-500 text-white" : "bg-gray-300 text-gray-700"
-              } hover:bg-blue-400`}
-            >
-              {index + 1}
-            </button>
-          ))}
+          {[...Array(Math.ceil(tasks.length / itemsPerPage))].map(
+            (_, index) => (
+              <button
+                key={index}
+                onClick={() => paginate(index + 1)}
+                className={`mx-1 px-4 py-2 rounded ${
+                  currentPage === index + 1
+                    ? "bg-blue-500 text-white"
+                    : "bg-gray-300 text-gray-700"
+                } hover:bg-blue-400`}
+              >
+                {index + 1}
+              </button>
+            )
+          )}
           <button
             onClick={() => paginate(currentPage + 1)}
             className="bg-gray-300 text-gray-700 px-4 py-2 rounded hover:bg-gray-400 disabled:opacity-50"
@@ -488,10 +494,8 @@ const TaskTable: React.FC = () => {
             Next
           </button>
         </div>
-
       </div>
 
-     
       {isModalOpen && (
         <div className="fixed inset-0 flex items-center justify-center mt-5 bg-gray-800 bg-opacity-50 z-50">
           <div className="bg-white p-6 rounded shadow-lg w-full max-w-md mx-4 max-h-[80vh] overflow-y-auto">

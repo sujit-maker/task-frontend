@@ -24,7 +24,7 @@ const UpdateProductModal: React.FC<UpdateProductModalProps> = ({
   >([]);
   const [subCategories, setSubCategories] = useState<{ id: number; subCategoryName: string }[]>([]);
 
-  // Fetch categories on component mount
+  
   useEffect(() => {
     const fetchCategories = async () => {
       try {
@@ -37,7 +37,7 @@ const UpdateProductModal: React.FC<UpdateProductModalProps> = ({
     fetchCategories();
   }, []);
 
-  // Fetch product data when modal is shown
+  
   useEffect(() => {
     const fetchProductData = async () => {
       if (productId) {
@@ -47,9 +47,9 @@ const UpdateProductModal: React.FC<UpdateProductModalProps> = ({
           setProductName(productData.productName);
           setProductDescription(productData.productDescription);
           setHSN(productData.HSN);
-          setCategoryId(productData.categoryId.toString()); // Convert categoryId to string for select
-          setSubCategoryId(productData.subCategoryId.toString()); // Convert subCategoryId to string for select
-          fetchSubCategories(productData.categoryId.toString()); // Fetch subcategories based on categoryId
+          setCategoryId(productData.categoryId.toString()); 
+          setSubCategoryId(productData.subCategoryId.toString()); 
+          fetchSubCategories(productData.categoryId.toString()); 
         } catch (error) {
           console.error("Error fetching product data:", error);
         }
@@ -70,7 +70,7 @@ const UpdateProductModal: React.FC<UpdateProductModalProps> = ({
     const selectedCategoryId = e.target.value;
     setCategoryId(selectedCategoryId);
     fetchSubCategories(selectedCategoryId);
-    setSubCategoryId(""); // Reset subcategory selection
+    setSubCategoryId(""); 
   };
 
   const handleSubCategoryChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -84,17 +84,23 @@ const UpdateProductModal: React.FC<UpdateProductModalProps> = ({
         productName,
         productDescription,
         HSN,
-        categoryId: parseInt(categoryId, 10),
-        subCategoryId: parseInt(subCategoryId, 10),
+        categoryId: parseInt(categoryId, 10),  
+        subCategoryId: parseInt(subCategoryId, 10),  
       };
-      await axios.put(`http://192.168.29.225:8000/products/${productId}`, updatedProduct);
+  
+      await axios.put(
+        `http://192.168.29.225:8000/products/${parseInt(productId, 10)}`,  
+        updatedProduct
+      );
+  
       fetchProducts();
+      alert("Product Updated Successfully")
       onHide();
     } catch (error) {
       console.error("Error updating product:", error);
     }
   };
-
+  
   const handleCancel = () => {
     onHide();
   };
@@ -159,7 +165,6 @@ const UpdateProductModal: React.FC<UpdateProductModalProps> = ({
                 className="p-3 border border-gray-300 rounded-md mt-1"
                 value={categoryId}
                 onChange={handleCategoryChange}
-                required
               >
                 <option value="">Select Category</option>
                 {categories.map((category) => (
@@ -179,11 +184,13 @@ const UpdateProductModal: React.FC<UpdateProductModalProps> = ({
                 required
               >
                 <option value="">Select Subcategory</option>
+                
                 {subCategories.map((subCategory) => (
                   <option key={subCategory.id} value={subCategory.id.toString()}>
                     {subCategory.subCategoryName}
                   </option>
                 ))}
+              
               </select>
             </div>
           </div>
